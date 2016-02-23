@@ -2,6 +2,7 @@
 `include "tasks.sv"
 
 module tb();
+    integer ifh, ofh;
 
     // Inputs
     reg CLK;
@@ -33,9 +34,15 @@ module tb();
         ENABLE = 1;
         DATA = 0;
 
-        // Read bitmap header
-        #20 read_bmp_head;
+        // Open files
+        ifh = open_file(`IFILE, "r");
+        ofh = open_file(`OFILE, "w");
 
+        // Read bitmap header
+        #20 read_bmp_head(ifh);
+
+        // Copy header to output file
+        write_bmp_head(ifh, ofh);
     end
 
     // Generate clock
@@ -43,8 +50,14 @@ module tb();
         #10 CLK  = ~CLK ;
 
     // Terminate simulation
-    initial
+    initial begin
+        // Close files
+        $fclose(ifh);
+        $fclose(ofh);
+
+        // Exit
         #1000 $finish;
+    end
 
     //--------------------------------------------------------------------------
     // Write test logic here!

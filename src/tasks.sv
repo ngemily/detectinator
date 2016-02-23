@@ -1,34 +1,48 @@
 `define IFILE "init/balloon.bmp"
 `define OFILE "dump/output.txt"
 
+function integer open_file(
+    input string fname,
+    input string mode
+);
+    integer fh;
+
+    fh = $fopen(fname, mode);
+    if (fh == 0) begin
+        $display("Error: Failed to open file.\n");
+        $display("Exiting Simulation.\n");
+        $finish;
+    end
+
+    return fh;
+endfunction
+
 /**
 * Copy input bitmap header to output bitmap.
 */
 task write_bmp_head(
     input integer ifh,
-    input integer offset
+    input integer ofh
 );
-    integer i, r, ofh;
+    integer i, r;
+    integer offset_to_data;
+
     reg [7:0] value0;
     reg [7:0] value1;
     reg [7:0] value2;
     reg [7:0] value3;
+    reg [31:0] value_32;
 
-    $display("offset %x\n", offset);
 
-    // Open file for writing.
-    ofh = $fopen(`OFILE, "w");
-    if (ofh == 0) begin
-        $display("Error: Failed to open output...\n Exiting Simulation.");
-        $finish;
-    end
+    r = $fseek(ifh, 10, 0);
+    offset_to_data = Utils#($bits(value_32))::read(ifh, "offset to data");
 
     // Copy from header from input file.
     //
     // Read 4 bytes and write a word because endianness and different sized
     // data types, and may only write with the granularity of one word.
     r = $fseek(ifh, 0, 0);
-    for (i = 0; i < offset / 8; i++) begin
+    for (i = 0; i < offset_to_data / 8; i++) begin
         r = $fread(value0, ifh);
         r = $fread(value1, ifh);
         r = $fread(value2, ifh);
@@ -36,16 +50,15 @@ task write_bmp_head(
         $fwrite(ofh, "%u", { value3, value2, value1, value0 });
     end
 
-    // close output file
-    $fclose(ofh);
-
 endtask
 
 /**
 * Read bitmap header.
 */
-task read_bmp_head;
-    integer j, r, fh;
+task read_bmp_head(
+    input integer ifh
+);
+    integer j, r;
 
     reg [31:0] offset_to_data;
     reg [31:0] value_32;
@@ -53,36 +66,22 @@ task read_bmp_head;
     reg [15:0] value_16;
     reg [7:0] value_8;
 
-    // Open file in read mode
-    fh = $fopen(`IFILE, "r");
-    if (fh == 0) begin
-        $display("Error: Failed to open file...\n Exiting Simulation.");
-        $finish;
-    end
-
     // Read bitmap header
-    value_16 = Utils#($bits(value_16))::read(fh, "signature");
-    value_32 = Utils#($bits(value_32))::read(fh, "size of file");
-    value_32 = Utils#($bits(value_32))::read(fh, "reserved");
-    offset_to_data = Utils#($bits(value_32))::read(fh, "offset to data");
-    value_32 = Utils#($bits(value_32))::read(fh, "size of header");
-    value_32 = Utils#($bits(value_32))::read(fh, "width");
-    value_32 = Utils#($bits(value_32))::read(fh, "height");
-    value_16 = Utils#($bits(value_16))::read(fh, "planes");
-    value_16 = Utils#($bits(value_16))::read(fh, "bits per pixel");
+    value_16 = Utils#($bits(value_16))::read(ifh, "signature");
+    value_32 = Utils#($bits(value_32))::read(ifh, "size of file");
+    value_32 = Utils#($bits(value_32))::read(ifh, "reserved");
+    offset_to_data = Utils#($bits(value_32))::read(ifh, "offset to data");
+    value_32 = Utils#($bits(value_32))::read(ifh, "size of header");
+    value_32 = Utils#($bits(value_32))::read(ifh, "width");
+    value_32 = Utils#($bits(value_32))::read(ifh, "height");
+    value_16 = Utils#($bits(value_16))::read(ifh, "planes");
+    value_16 = Utils#($bits(value_16))::read(ifh, "bits per pixel");
 
     // Seek to data. read pixel data.
-    r = $fseek(fh, offset_to_data, 0);
+    r = $fseek(ifh, offset_to_data, 0);
     for (j = 0; j < 12; j++) begin
         #10
-        r = $fread(value_24, fh);
+        r = $fread(value_24, ifh);
         $display("mem_Address = %x ; mem_Content = %x", j, value_24);
     end
-
-    // Copy header to output file
-    write_bmp_head(fh, offset_to_data);
-
-    // Close file.
-    $fclose(fh);
-
 endtask
