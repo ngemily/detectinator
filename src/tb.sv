@@ -69,7 +69,7 @@ module tb;
             DATA = 0;
     end
 
-    class Utils #(
+    virtual class Utils #(
         parameter WIDTH=32
     );
         static function [WIDTH-1:0] reverseEndianness (
@@ -96,16 +96,16 @@ module tb;
                     reverseEndianness = data;
                 end
             endcase
-        
+
         endfunction
 
-        static function [15:0] read ();
+        static function [WIDTH-1:0] read (
+            input string s
+        );
             integer r;
-            reg [15:0 ] value_16;
-            r = $fread(value_16, fh);
-            $display("%21s 0x%h", "signature",
-                Utils#($bits(value_16))::reverseEndianness(value_16));
-            read = value_16;
+            r = $fread(read, fh);
+            read = Utils#($bits(read))::reverseEndianness(read);
+            $display("%20s 0x%h", s, read);
         endfunction
     endclass
 
@@ -125,41 +125,24 @@ module tb;
         // Open file in read mode
         fh = $fopen("init/balloon.bmp","r");
         if (fh == 0) begin
-         $display("Error: Failed to open file...\n Exiting Simulation.");
-         $finish;
+            $display("Error: Failed to open file...\n Exiting Simulation.");
+            $finish;
         end
 
         // Read bitmap header
-        r = $fread(value_16, fh);
-        $display("%21s 0x%h", "signature",
-            Utils#($bits(value_16))::reverseEndianness(value_16));
-
-        r = $fread(value_32, fh);
-        $display("Size of file \t\t0x%h", value_32);
-
-        // reserved
-        r = $fread(value_32, fh);
-
-        r = $fread(offset_to_data, fh);
-        $display("Offset to data \t0x%h", offset_to_data);
-
-        r = $fread(value_32, fh);
-        $display("Size of header \t0x%h", value_32);
-
-        r = $fread(value_32, fh);
-        $display("Width \t\t0x%h", value_32);
-
-        r = $fread(value_32, fh);
-        $display("Height \t\t0x%h", value_32);
-
-        r = $fread(value_16, fh);
-        $display("Planes  \t\t0x%h", value_16);
-
-        r = $fread(value_16, fh);
-        $display("Bits per pixel \t0x%h", value_16);
+        value_16 = Utils#($bits(value_16))::read("signature");
+        value_32 = Utils#($bits(value_32))::read("size of file");
+        value_32 = Utils#($bits(value_32))::read("reserved");
+        offset_to_data = Utils#($bits(value_32))::read("offset to data");
+        value_32 = Utils#($bits(value_32))::read("size of header");
+        value_32 = Utils#($bits(value_32))::read("width");
+        value_32 = Utils#($bits(value_32))::read("height");
+        value_16 = Utils#($bits(value_16))::read("planes");
+        value_16 = Utils#($bits(value_16))::read("bits per pixel");
 
         // Seek to data. read pixel data.
-        r = $fseek(fh, offset_to_data[31:24], 0);
+        $display("offset %x\n", offset_to_data);
+        r = $fseek(fh, offset_to_data, 0);
         for (j = 0; j < 12; j++) begin
             #10
             r = $fread(value_24, fh);
