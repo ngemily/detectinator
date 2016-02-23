@@ -1,9 +1,7 @@
 `include "utils.sv"
 `include "tasks.sv"
-module tb;
 
-    integer out_ptr  ;
-    integer r;
+module tb();
 
     // Inputs
     reg CLK;
@@ -23,35 +21,36 @@ module tb;
         .OUT(OUT)
     );
 
+    // Initialization sequence
     initial begin
-
-        // Initialize Inputs
+        // Initialize inputs
         CLK = 0;
         RESET = 1;
 
+        // Deassert reset
         #20
         RESET = 0;
         ENABLE = 1;
         DATA = 0;
 
+        // Read bitmap header
         #20 read_bmp_head;
 
-        #1000 $finish;
     end
-    //--------------------------------------------------------------------------
-    // Generate the periodic clock signal
+
+    // Generate clock
     always
         #10 CLK  = ~CLK ;
-    //--------------------------------------------------------------------------
-    // Write Computed output to file after every clock cycle
-    //--------------------------------------------------------------------------
 
-    always @ (posedge CLK)
-    begin   : output_text_file
-            #20
-            //$fwrite(out_ptr,"%d\n",OUT);    // Here OUT is the signal you want to write in file
-            //$display("Time=%t ; OUT=%d ", $time,OUT);
-            DATA = 0;
+    // Terminate simulation
+    initial
+        #1000 $finish;
+
+    //--------------------------------------------------------------------------
+    // Write test logic here!
+    //--------------------------------------------------------------------------
+    always @ (posedge CLK) begin
+        #20 DATA = 0;
     end
 
 
