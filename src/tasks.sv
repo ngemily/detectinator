@@ -1,4 +1,4 @@
-`define IFILE "init/balloon.bmp"
+`define IFILE "imgs/balloon.bmp"
 `define OFILE "dump/output.txt"
 
 function integer open_file(
