@@ -1,8 +1,6 @@
 module tb;
 
     integer out_ptr  ;
-    integer fh ;
-    integer j, value ;
     integer r;
 
     // Inputs
@@ -25,33 +23,18 @@ module tb;
 
     initial begin
 
-        // Output data file (Output data will be written into the file mentioend
-        // below)
-        out_ptr     = $fopen("dump/output.txt","w");
-        if (out_ptr == 0)
-        begin
-         $display("Error: Failed to open output...\n Exiting Simulation.");
-         $finish;
-        end
-
-
         // Initialize Inputs
         CLK = 0;
         RESET = 1;
 
         #20
-        RESET = 0 ;
+        RESET = 0;
         ENABLE = 1;
         DATA = 0;
 
-        #20
-        init_mem ;      // To read data from file and intialize the memory
+        #20 init_mem;
 
-        ///////////// Put you stimulus here ///////////////
-
-        #1000
-        $fclose(out_ptr);
-        $finish;
+        #1000 $finish;
     end
     //--------------------------------------------------------------------------
     // Generate the periodic clock signal
@@ -69,6 +52,9 @@ module tb;
             DATA = 0;
     end
 
+    // ==================
+    // Utility functions.
+    // ==================
     virtual class Utils #(
         parameter WIDTH=32
     );
@@ -100,6 +86,7 @@ module tb;
         endfunction
 
         static function [WIDTH-1:0] read (
+            input integer fh,
             input string s
         );
             integer r;
@@ -109,11 +96,48 @@ module tb;
         endfunction
     endclass
 
+    task init_out(
+        input integer ifh,
+        input integer offset
+    );
+        integer i, ofh;
+        reg [7:0] value0;
+        reg [7:0] value1;
+        reg [7:0] value2;
+        reg [7:0] value3;
+
+        $display("offset %x\n", offset);
+
+        // Open file for writing.
+        ofh = $fopen("dump/output.txt","w");
+        if (ofh == 0) begin
+            $display("Error: Failed to open output...\n Exiting Simulation.");
+            $finish;
+        end
+
+        // Copy from header from input file.
+        //
+        // Read 4 bytes and write a word because endianness and different sized
+        // data types, and may only write with the granularity of one word.
+        r = $fseek(ifh, 0, 0);
+        for (i = 0; i < offset / 8; i++) begin
+            r = $fread(value0, ifh);
+            r = $fread(value1, ifh);
+            r = $fread(value2, ifh);
+            r = $fread(value3, ifh);
+            $fwrite(ofh, "%u", { value3, value2, value1, value0 });
+        end
+
+        // close output file
+        $fclose(ofh);
+
+    endtask
+
     //--------------------------------------------------------------------------
     // This task is to initialize memory from file
     //--------------------------------------------------------------------------
     task init_mem;
-    integer j;
+    integer j, fh;
 
     reg [31:0] offset_to_data;
     reg [31:0] value_32;
@@ -130,18 +154,17 @@ module tb;
         end
 
         // Read bitmap header
-        value_16 = Utils#($bits(value_16))::read("signature");
-        value_32 = Utils#($bits(value_32))::read("size of file");
-        value_32 = Utils#($bits(value_32))::read("reserved");
-        offset_to_data = Utils#($bits(value_32))::read("offset to data");
-        value_32 = Utils#($bits(value_32))::read("size of header");
-        value_32 = Utils#($bits(value_32))::read("width");
-        value_32 = Utils#($bits(value_32))::read("height");
-        value_16 = Utils#($bits(value_16))::read("planes");
-        value_16 = Utils#($bits(value_16))::read("bits per pixel");
+        value_16 = Utils#($bits(value_16))::read(fh, "signature");
+        value_32 = Utils#($bits(value_32))::read(fh, "size of file");
+        value_32 = Utils#($bits(value_32))::read(fh, "reserved");
+        offset_to_data = Utils#($bits(value_32))::read(fh, "offset to data");
+        value_32 = Utils#($bits(value_32))::read(fh, "size of header");
+        value_32 = Utils#($bits(value_32))::read(fh, "width");
+        value_32 = Utils#($bits(value_32))::read(fh, "height");
+        value_16 = Utils#($bits(value_16))::read(fh, "planes");
+        value_16 = Utils#($bits(value_16))::read(fh, "bits per pixel");
 
         // Seek to data. read pixel data.
-        $display("offset %x\n", offset_to_data);
         r = $fseek(fh, offset_to_data, 0);
         for (j = 0; j < 12; j++) begin
             #10
@@ -150,8 +173,12 @@ module tb;
             $fwrite(out_ptr,"%u",value_24);
         end
 
+        // Copy header to output file
+        init_out(fh, offset_to_data);
+
         // Close file.
         $fclose(fh);
+
     end
     endtask
     //--------------------------------------------------------------------------
