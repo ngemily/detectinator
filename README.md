@@ -3,9 +3,11 @@ Detectinator
 
 About
 -----
-Hardware implementation of https://github.com/ngemily/opencv-object-detection
-object detecting software.
 
+Hardware implementation of [opencv-object-detection][1] object detecting
+software.
+
+[1]: https://github.com/ngemily/opencv-object-detection
 
 Quick Start
 -----------
