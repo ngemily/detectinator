@@ -76,6 +76,12 @@ task read_bmp_head(
     value_32 = Utils#($bits(value_32))::read(ifh, "height");
     value_16 = Utils#($bits(value_16))::read(ifh, "planes");
     value_16 = Utils#($bits(value_16))::read(ifh, "bits per pixel");
+    value_32 = Utils#($bits(value_32))::read(ifh, "compression method");
+    value_32 = Utils#($bits(value_32))::read(ifh, "size of data");
+    value_32 = Utils#($bits(value_32))::read(ifh, "horizontal res");
+    value_32 = Utils#($bits(value_32))::read(ifh, "vertical res");
+    value_32 = Utils#($bits(value_32))::read(ifh, "no. colors");
+    value_32 = Utils#($bits(value_32))::read(ifh, "no. important colors");
 
     // Seek to data. read pixel data.
     r = $fseek(ifh, offset_to_data, 0);

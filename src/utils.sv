@@ -39,9 +39,12 @@ class Utils #(
         input integer fh,   // input file handle
         input string s      // string describing value
     );
-        integer r;
+        integer r, position;
+
+        position = $ftell(fh);
         r = $fread(read, fh);
         read = Utils#($bits(read))::reverseEndianness(read);
-        $display("%20s 0x%h", s, read);
+
+        $display("0x%x %20s 0x%h", position, s, read);
     endfunction
 endclass
