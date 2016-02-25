@@ -1,9 +1,11 @@
+`include "global.vh"
+
 module top (
-    input CLK,
-    input RESET,
-    input ENABLE,
-    input [31:0] DATA,
-    output OUT
+    input clk,
+    input reset,
+    input en,
+    input [`PIXEL_SIZE:0] data,
+    output [`PIXEL_SIZE:0] out
 );
-    assign OUT = DATA;
+    assign out = data;
 endmodule

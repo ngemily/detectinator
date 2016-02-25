@@ -1,5 +1,4 @@
-`define MEM_SIZE 'h10_0000
-`define WORD_SIZE 8
+`include "global.vh"
 
 `include "utils.sv"
 `include "tasks.sv"
@@ -8,37 +7,42 @@ module tb();
     integer ifh, ofh;
 
     // Inputs
-    reg CLK;
-    reg RESET;
-    reg ENABLE;
-    reg [31:0] DATA;
+    reg clk;
+    reg reset;
+    reg en;
+    reg [`PIXEL_SIZE:0] data;
 
     // Outputs
-    wire OUT;
+    wire [`PIXEL_SIZE:0] out;
 
     // Internal
+    //reg [`MEM_SIZE:0] count;
+    integer count;
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
 
     // Instantiate the Unit Under Test (DUT)
     top dut (
-        .CLK(CLK),
-        .RESET(RESET),
-        .ENABLE(ENABLE),
-        .DATA(DATA),
-        .OUT(OUT)
+        .clk(clk),
+        .reset(reset),
+        .en(en),
+        .data(data),
+        .out(out)
     );
 
+    // =======================
     // Initialization sequence
+    // =======================
     initial begin
         // Initialize inputs
-        CLK = 0;
-        RESET = 1;
+        clk = 0;
+        reset = 1;
+        count = 0;
 
         // Deassert reset
         #20
-        RESET = 0;
-        ENABLE = 1;
-        DATA = 0;
+        reset = 0;
+        en = 1;
+        data = 0;
 
         // Open files
         ifh = open_file(`IFILE, "rb");
@@ -48,31 +52,39 @@ module tb();
         read_bmp_head(ifh);
         init_mem(ifh, mem);
 
+    end
+
+    // ====================
+    // Termination sequence
+    // ====================
+    initial begin
+        #1000
+
         // Write bitmap
         write_bmp_head(ifh, ofh);
         write_mem(ofh, mem);
-    end
 
-    // Generate clock
-    always
-        #10 CLK  = ~CLK ;
-
-    // Terminate simulation
-    initial begin
         // Close files
         $fclose(ifh);
         $fclose(ofh);
 
         // Exit
-        #1000 $finish;
+        $finish;
     end
 
-    //--------------------------------------------------------------------------
-    // Write test logic here!
-    //--------------------------------------------------------------------------
-    always @ (posedge CLK) begin
-        #20 DATA = 0;
-    end
+    // ----------------
+    // Clock generation
+    // ----------------
+    always
+        #10 clk  = ~clk ;
 
+    //-----------
+    // Test logic
+    //-----------
+    always @ (posedge clk) begin
+        data = mem[count];
+        $display("0x%x", out);
+        count++;
+    end
 
 endmodule
