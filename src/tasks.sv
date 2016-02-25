@@ -59,32 +59,35 @@ endtask
 * Read bitmap header.
 */
 task read_bmp_head(
-    input integer ifh
+    input integer ifh,
+    output integer width,
+    output integer height,
+    output integer size_of_data,
+    output integer offset_to_data
 );
-    integer j, r;
+    integer r;
 
-    reg [31:0] offset_to_data;
     reg [31:0] value_32;
     reg [23:0] value_24;
     reg [15:0] value_16;
     reg [7:0] value_8;
 
     // Read bitmap header
-    value_16 = Utils#($bits(value_16))::read(ifh, "signature");
-    value_32 = Utils#($bits(value_32))::read(ifh, "size of file");
-    value_32 = Utils#($bits(value_32))::read(ifh, "reserved");
+    value_16       = Utils#($bits(value_16))::read(ifh, "signature");
+    value_32       = Utils#($bits(value_32))::read(ifh, "size of file");
+    value_32       = Utils#($bits(value_32))::read(ifh, "reserved");
     offset_to_data = Utils#($bits(value_32))::read(ifh, "offset to data");
-    value_32 = Utils#($bits(value_32))::read(ifh, "size of header");
-    value_32 = Utils#($bits(value_32))::read(ifh, "width");
-    value_32 = Utils#($bits(value_32))::read(ifh, "height");
-    value_16 = Utils#($bits(value_16))::read(ifh, "planes");
-    value_16 = Utils#($bits(value_16))::read(ifh, "bits per pixel");
-    value_32 = Utils#($bits(value_32))::read(ifh, "compression method");
-    value_32 = Utils#($bits(value_32))::read(ifh, "size of data");
-    value_32 = Utils#($bits(value_32))::read(ifh, "horizontal res");
-    value_32 = Utils#($bits(value_32))::read(ifh, "vertical res");
-    value_32 = Utils#($bits(value_32))::read(ifh, "no. colors");
-    value_32 = Utils#($bits(value_32))::read(ifh, "no. important colors");
+    value_32       = Utils#($bits(value_32))::read(ifh, "size of header");
+    width          = Utils#($bits(value_32))::read(ifh, "width");
+    height         = Utils#($bits(value_32))::read(ifh, "height");
+    value_16       = Utils#($bits(value_16))::read(ifh, "planes");
+    value_16       = Utils#($bits(value_16))::read(ifh, "bits per pixel");
+    value_32       = Utils#($bits(value_32))::read(ifh, "compression method");
+    size_of_data   = Utils#($bits(value_32))::read(ifh, "size of data");
+    value_32       = Utils#($bits(value_32))::read(ifh, "horizontal res");
+    value_32       = Utils#($bits(value_32))::read(ifh, "vertical res");
+    value_32       = Utils#($bits(value_32))::read(ifh, "no. colors");
+    value_32       = Utils#($bits(value_32))::read(ifh, "no. important colors");
 
     // Seek to data. read pixel data.
     r = $fseek(ifh, offset_to_data, 0);

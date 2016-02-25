@@ -16,7 +16,10 @@ module tb();
     wire [`PIXEL_SIZE:0] out;
 
     // Internal
-    //reg [`MEM_SIZE:0] count;
+    integer width;
+    integer height;
+    integer size_of_data;
+    integer offset_to_data;
     integer count;
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
 
@@ -49,7 +52,13 @@ module tb();
         ofh = open_file(`OFILE, "wb");
 
         // Read bitmap
-        read_bmp_head(ifh);
+        read_bmp_head(
+            .ifh(ifh),
+            .width(width),
+            .height(height),
+            .size_of_data(size_of_data),
+            .offset_to_data(offset_to_data)
+        );
         init_mem(ifh, mem);
 
     end
