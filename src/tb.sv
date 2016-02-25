@@ -1,3 +1,6 @@
+`define MEM_SIZE 'h10_0000
+`define WORD_SIZE 8
+
 `include "utils.sv"
 `include "tasks.sv"
 
@@ -12,6 +15,9 @@ module tb();
 
     // Outputs
     wire OUT;
+
+    // Internal
+    reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
 
     // Instantiate the Unit Under Test (DUT)
     top dut (
@@ -35,14 +41,16 @@ module tb();
         DATA = 0;
 
         // Open files
-        ifh = open_file(`IFILE, "r");
-        ofh = open_file(`OFILE, "w");
+        ifh = open_file(`IFILE, "rb");
+        ofh = open_file(`OFILE, "wb");
 
-        // Read bitmap header
-        #20 read_bmp_head(ifh);
+        // Read bitmap
+        read_bmp_head(ifh);
+        init_mem(ifh, mem);
 
-        // Copy header to output file
+        // Write bitmap
         write_bmp_head(ifh, ofh);
+        write_mem(ofh, mem);
     end
 
     // Generate clock

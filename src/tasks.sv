@@ -1,6 +1,9 @@
 `define IFILE "imgs/balloon.bmp"
-`define OFILE "dump/output.txt"
+`define OFILE "dump/out.bmp"
 
+/**
+* Open file.  Return file handle.
+*/
 function integer open_file(
     input string fname,
     input string mode
@@ -42,7 +45,7 @@ task write_bmp_head(
     // Read 4 bytes and write a word because endianness and different sized
     // data types, and may only write with the granularity of one word.
     r = $fseek(ifh, 0, 0);
-    for (i = 0; i < offset_to_data / 8; i++) begin
+    for (i = 0; i < offset_to_data; i += 4) begin
         r = $fread(value0, ifh);
         r = $fread(value1, ifh);
         r = $fread(value2, ifh);
@@ -85,9 +88,43 @@ task read_bmp_head(
 
     // Seek to data. read pixel data.
     r = $fseek(ifh, offset_to_data, 0);
-    for (j = 0; j < 12; j++) begin
-        #10
-        r = $fread(value_24, ifh);
-        $display("mem_Address = %x ; mem_Content = %x", j, value_24);
+endtask
+
+/**
+* Read image data into memory.
+*/
+task init_mem(
+    input integer fh,
+    output reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
+);
+    integer i, r;
+    reg [7:0] pixel;
+
+    for (i = 0; i < 'h3020c; i++) begin
+        r = $fread(pixel, fh);
+        mem[i] = pixel;
     end
+
+endtask
+
+/*
+* Write image data to file.
+*/
+task write_mem(
+    input integer fh,
+    input reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
+);
+    integer i;
+    reg [31:0] value;
+
+    // WARNING alignment issues with size of header.
+    //
+    // $fwrite may only write a word (4 bytes) at a time, but start of image
+    // data is not word aligned.  At this time, it is not clear whether or not
+    // a static offset will work for all images.
+    for (i = 2; i < 'h3020c; i += 4) begin
+        value = {mem[i+3], mem[i+2], mem[i+1], mem[i+0]};
+        $fwrite(fh, "%u", value);
+    end
+
 endtask
