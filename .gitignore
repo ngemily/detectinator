@@ -1,4 +1,7 @@
+# Modelsim
 transcript
-*.xxd
 work/*
-dump/*
+
+# Outputs
+*.xxd
+out/*

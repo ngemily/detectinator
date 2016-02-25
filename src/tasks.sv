@@ -1,5 +1,5 @@
 `define IFILE "imgs/balloon.bmp"
-`define OFILE "dump/out.bmp"
+`define OFILE "out/out.bmp"
 
 /**
 * Open file.  Return file handle.
