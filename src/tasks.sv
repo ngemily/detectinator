@@ -97,14 +97,15 @@ endtask
 * Read image data into memory.
 */
 task init_mem(
-    input integer fh,
+    input integer ifh,
+    input integer bytes,
     output reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
 );
     integer i, r;
     reg [7:0] pixel;
 
-    for (i = 0; i < 'h3020c; i++) begin
-        r = $fread(pixel, fh);
+    for (i = 0; i < bytes; i++) begin
+        r = $fread(pixel, ifh);
         mem[i] = pixel;
     end
 
@@ -114,7 +115,8 @@ endtask
 * Write image data to file.
 */
 task write_mem(
-    input integer fh,
+    input integer ofh,
+    input integer bytes,
     input reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
 );
     integer i;
@@ -125,9 +127,9 @@ task write_mem(
     // $fwrite may only write a word (4 bytes) at a time, but start of image
     // data is not word aligned.  At this time, it is not clear whether or not
     // a static offset will work for all images.
-    for (i = 2; i < 'h3020c; i += 4) begin
+    for (i = 2; i < bytes; i += 4) begin
         value = {mem[i+3], mem[i+2], mem[i+1], mem[i+0]};
-        $fwrite(fh, "%u", value);
+        $fwrite(ofh, "%u", value);
     end
 
 endtask

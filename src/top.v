@@ -7,5 +7,5 @@ module top (
     input [`PIXEL_SIZE:0] data,
     output [`PIXEL_SIZE:0] out
 );
-    assign out = data;
+    assign out = {data[7:0], data[15:8], data[23:16]};
 endmodule

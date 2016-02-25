@@ -59,7 +59,12 @@ module tb();
             .size_of_data(size_of_data),
             .offset_to_data(offset_to_data)
         );
-        init_mem(ifh, mem);
+
+        init_mem(
+            .ifh(ifh),
+            .bytes(size_of_data),
+            .mem(mem)
+        );
 
     end
 
@@ -67,11 +72,15 @@ module tb();
     // Termination sequence
     // ====================
     initial begin
-        #1000
+        #500_000
 
         // Write bitmap
         write_bmp_head(ifh, ofh);
-        write_mem(ofh, mem);
+        write_mem(
+            .ofh(ofh),
+            .bytes(size_of_data),
+            .mem(mem)
+        );
 
         // Close files
         $fclose(ifh);
@@ -91,9 +100,12 @@ module tb();
     // Test logic
     //-----------
     always @ (posedge clk) begin
-        data = mem[count];
-        $display("0x%x", out);
-        count++;
+        data = {mem[count + 2], mem[count + 1], mem[count + 0]};
+        //$display("0x%x", out);
+        mem[count + 0] = out[7:0];
+        mem[count + 1] = out[15:8];
+        mem[count + 2] = out[23:16];
+        count += 3;
     end
 
 endmodule
