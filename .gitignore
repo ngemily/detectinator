@@ -1,6 +1,7 @@
 # Modelsim
 transcript
 work/*
+*.wlf
 
 # Outputs
 *.xxd

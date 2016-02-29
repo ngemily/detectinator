@@ -3,7 +3,7 @@ vlib work
 vlog src/top.v
 vlog src/tb.sv
 
-vsim tb
+vsim -gui tb
 run -all
 
 exit
