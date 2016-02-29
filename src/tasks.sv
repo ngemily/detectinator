@@ -109,6 +109,13 @@ task init_mem(
         mem[i] = pixel;
     end
 
+`ifdef DEBUG
+    $display("Reading...");
+    for (i = 0; i < 12; i++) begin
+        $display("\t%u: %u", i, mem[i]);
+    end
+`endif
+
 endtask
 
 /*
@@ -121,6 +128,13 @@ task write_mem(
 );
     integer i;
     reg [31:0] value;
+
+`ifdef DEBUG
+    $display("Writing...");
+    for (i = 0; i < 12; i++) begin
+        $display("\t%u: %u", i, mem[i]);
+    end
+`endif
 
     // WARNING alignment issues with size of header.
     //

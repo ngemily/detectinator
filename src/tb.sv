@@ -39,7 +39,7 @@ module tb();
         // Initialize inputs
         clk = 0;
         reset = 1;
-        count = 0;
+        count = 2;
 
         // Deassert reset
         #20
