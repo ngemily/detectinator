@@ -63,8 +63,11 @@ task read_bmp_head(
     output integer width,
     output integer height,
     output integer size_of_data,
-    output integer offset_to_data
+    output integer offset_to_data,
+    output integer bytes_per_pixel,
+    output integer padding
 );
+    integer bytes_per_row, bits_per_pixel;
     integer r;
 
     reg [31:0] value_32;
@@ -81,13 +84,22 @@ task read_bmp_head(
     width          = Utils#($bits(value_32))::read(ifh, "width");
     height         = Utils#($bits(value_32))::read(ifh, "height");
     value_16       = Utils#($bits(value_16))::read(ifh, "planes");
-    value_16       = Utils#($bits(value_16))::read(ifh, "bits per pixel");
+    bits_per_pixel = Utils#($bits(value_16))::read(ifh, "bits per pixel");
     value_32       = Utils#($bits(value_32))::read(ifh, "compression method");
     size_of_data   = Utils#($bits(value_32))::read(ifh, "size of data");
     value_32       = Utils#($bits(value_32))::read(ifh, "horizontal res");
     value_32       = Utils#($bits(value_32))::read(ifh, "vertical res");
     value_32       = Utils#($bits(value_32))::read(ifh, "no. colors");
     value_32       = Utils#($bits(value_32))::read(ifh, "no. important colors");
+
+    // Bitmaps pad end of row to 4 bytes
+    bytes_per_pixel = bits_per_pixel / 8;
+    bytes_per_row = width * bytes_per_pixel / 8;
+    padding = 4 - bytes_per_row % 4;
+
+    $display("%20s %u", "bytes_per_pixel", bytes_per_pixel);
+    $display("%20s %u", "bytes_per_row", bytes_per_row);
+    $display("%20s %u", "padding", padding);
 
     // Seek to data. read pixel data.
     r = $fseek(ifh, offset_to_data, 0);
@@ -98,15 +110,22 @@ endtask
 */
 task init_mem(
     input integer ifh,
-    input integer bytes,
+    input integer bytes_per_row,
+    input integer rows,
+    input integer padding,
     output reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
 );
-    integer i, r;
+    integer i, j, r;
     reg [7:0] pixel;
 
-    for (i = 0; i < bytes; i++) begin
-        r = $fread(pixel, ifh);
-        mem[i] = pixel;
+    for (i = 0; i < rows; i++) begin
+        for (j = 0; j < bytes_per_row; j++) begin
+            r = $fread(pixel, ifh);
+            mem[i * bytes_per_row + j] = pixel;
+        end
+        for (j = 0; j < padding; j++) begin
+            r = $fgetc(ifh);
+        end
     end
 
 `ifdef DEBUG
@@ -123,10 +142,12 @@ endtask
 */
 task write_mem(
     input integer ofh,
-    input integer bytes,
+    input integer bytes_per_row,
+    input integer rows,
+    input integer padding,
     input reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
 );
-    integer i;
+    integer i, j, idx;
     reg [31:0] value;
 
 `ifdef DEBUG
@@ -141,9 +162,16 @@ task write_mem(
     // $fwrite may only write a word (4 bytes) at a time, but start of image
     // data is not word aligned.  At this time, it is not clear whether or not
     // a static offset will work for all images.
-    for (i = 5; i < bytes + 5; i += 4) begin
-        value = {mem[i+3], mem[i+2], mem[i+1], mem[i+0]};
-        $fwrite(ofh, "%u", value);
+    for (i = 0; i < rows; i++) begin
+        for (j = 0; j < bytes_per_row + padding; j += 4) begin
+            idx = i * bytes_per_row + j + 5;
+            //value = {mem[idx+3], mem[idx+2], mem[idx+1], mem[idx+0]};
+            value[31:24] = (j + 3 < bytes_per_row) ? mem[idx + 3] : 8'h0;
+            value[23:16] = (j + 2 < bytes_per_row) ? mem[idx + 2] : 8'h0;
+            value[15:8]  = (j + 1 < bytes_per_row) ? mem[idx + 1] : 8'h0;
+            value[7:0]   = (j + 0 < bytes_per_row) ? mem[idx + 0] : 8'h0;
+            $fwrite(ofh, "%u", value);
+        end
     end
 
 endtask

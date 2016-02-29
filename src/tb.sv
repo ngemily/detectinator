@@ -21,6 +21,8 @@ module tb();
     integer size_of_data;
     integer offset_to_data;
     integer count;
+    integer padding;
+    integer bytes_per_pixel;
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
 
     // Instantiate the Unit Under Test (DUT)
@@ -57,12 +59,16 @@ module tb();
             .width(width),
             .height(height),
             .size_of_data(size_of_data),
-            .offset_to_data(offset_to_data)
+            .offset_to_data(offset_to_data),
+            .padding(padding),
+            .bytes_per_pixel(bytes_per_pixel)
         );
 
         init_mem(
             .ifh(ifh),
-            .bytes(size_of_data),
+            .bytes_per_row(width * bytes_per_pixel),
+            .rows(height),
+            .padding(padding),
             .mem(mem)
         );
 
@@ -78,7 +84,9 @@ module tb();
         write_bmp_head(ifh, ofh);
         write_mem(
             .ofh(ofh),
-            .bytes(size_of_data),
+            .bytes_per_row(width * bytes_per_pixel),
+            .rows(height),
+            .padding(padding),
             .mem(mem)
         );
 
