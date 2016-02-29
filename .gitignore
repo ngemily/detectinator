@@ -6,3 +6,8 @@ work/*
 # Outputs
 *.xxd
 out/*
+
+# Vivado
+viv/*
+*.jou
+*.log
