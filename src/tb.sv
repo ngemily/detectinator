@@ -10,10 +10,10 @@ module tb();
     reg clk;
     reg reset;
     reg en;
-    reg [`PIXEL_SIZE:0] data;
+    reg [`PIXEL_SIZE - 1:0] data;
 
     // Outputs
-    wire [`PIXEL_SIZE:0] out;
+    wire [`PIXEL_SIZE - 1:0] out;
 
     // Internal
     integer width;
@@ -39,7 +39,7 @@ module tb();
         // Initialize inputs
         clk = 0;
         reset = 1;
-        count = 2;
+        count = 0;
 
         // Deassert reset
         #20
@@ -72,7 +72,7 @@ module tb();
     // Termination sequence
     // ====================
     initial begin
-        #500_000
+        #2_000_000
 
         // Write bitmap
         write_bmp_head(ifh, ofh);
@@ -105,6 +105,13 @@ module tb();
         mem[count + 0] = out[7:0];
         mem[count + 1] = out[15:8];
         mem[count + 2] = out[23:16];
+`ifdef DEBUG
+        if (count < 24) begin
+            $display("tb: %u: %u", count + 0, mem[count + 0]);
+            $display("tb: %u: %u", count + 1, mem[count + 1]);
+            $display("tb: %u: %u", count + 2, mem[count + 2]);
+        end
+`endif
         count += 3;
     end
 

@@ -131,7 +131,7 @@ task write_mem(
 
 `ifdef DEBUG
     $display("Writing...");
-    for (i = 0; i < 12; i++) begin
+    for (i = 5; i < 12; i++) begin
         $display("\t%u: %u", i, mem[i]);
     end
 `endif
@@ -141,7 +141,7 @@ task write_mem(
     // $fwrite may only write a word (4 bytes) at a time, but start of image
     // data is not word aligned.  At this time, it is not clear whether or not
     // a static offset will work for all images.
-    for (i = 2; i < bytes; i += 4) begin
+    for (i = 5; i < bytes + 5; i += 4) begin
         value = {mem[i+3], mem[i+2], mem[i+1], mem[i+0]};
         $fwrite(ofh, "%u", value);
     end
