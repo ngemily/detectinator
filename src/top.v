@@ -16,15 +16,10 @@ module top #(
     input [`PIXEL_SIZE - 1:0] data,
     output [`PIXEL_SIZE - 1:0] out
 );
-    wire [7:0] R = data[7:0];
-    wire [7:0] G = data[15:8];
-    wire [7:0] B = data[23:16];
-
-    // Calculate grayscale intensity
-    // I = 0.299 * R + 0.587 * G + 0.114 * B;
-    wire [7:0] I = (R >> 2) + (R >> 5)
-                    + (G >> 1) + (G >> 4)
-                    + (B >> 4) + (B >> 5);
+    wire [`WORD_SIZE - 1:0] R = data[7:0];
+    wire [`WORD_SIZE - 1:0] G = data[15:8];
+    wire [`WORD_SIZE - 1:0] B = data[23:16];
+    wire [`WORD_SIZE - 1:0] I;
 
     // Keep three buffers, for the last three rows.
     reg [`WORD_SIZE - 1:0] buf2 [1024:0];
@@ -37,9 +32,16 @@ module top #(
 
     integer i;
 
-    // Shift in one pixel every clock cycle.
+    rgb2i U1(
+        .R(R),
+        .G(G),
+        .B(B),
+        .I(I)
+    );
+
+    // Shift in one pixel every clock cycle into three cascading buffers.
     always @(posedge clk) begin
-        buf0[0] <= I;
+        buf0[0] <= data;
         buf1[0] <= buf0[width - 1];
         buf2[0] <= buf1[width - 1];
         for(i = 1; i < width; i = i + 1) begin
@@ -67,9 +69,46 @@ module top #(
         .q(window_out)
     );
 
-    assign threshold_out = (window_out > `THRESHOLD) ? `MAX : `MIN;
+    threshold #(
+        .WIDTH(`WORD_SIZE)
+    )
+    U3 (
+        .d(window_out),
+        .q(threshold_out)
+    );
+
     assign out = {3{threshold_out}};
 
+endmodule
+
+/**
+* Perform binary threshold, like a step function u(t).
+*/
+module threshold #(
+    parameter WIDTH = 1,
+    parameter THRESHOLD = `THRESHOLD,
+    parameter HI = `MAX,
+    parameter LO = `MIN
+) (
+    input [WIDTH - 1:0] d,
+    output [WIDTH - 1:0] q
+);
+    assign q = (d > THRESHOLD) ? HI : LO;
+endmodule
+
+/**
+* Calculate grayscale (intensity) from RGB
+*/
+module rgb2i(
+    input [`WORD_SIZE - 1:0] R,
+    input [`WORD_SIZE - 1:0] G,
+    input [`WORD_SIZE - 1:0] B,
+    output [`WORD_SIZE - 1:0] I
+);
+    // I = 0.299 * R + 0.587 * G + 0.114 * B;
+    assign I = (R >> 2) + (R >> 5)
+                + (G >> 1) + (G >> 4)
+                + (B >> 4) + (B >> 5);
 endmodule
 
 /**
