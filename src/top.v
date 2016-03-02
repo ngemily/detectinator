@@ -41,7 +41,7 @@ module top #(
 
     // Shift in one pixel every clock cycle into three cascading buffers.
     always @(posedge clk) begin
-        buf0[0] <= data;
+        buf0[0] <= I;
         buf1[0] <= buf0[width - 1];
         buf2[0] <= buf1[width - 1];
         for(i = 1; i < width; i = i + 1) begin
