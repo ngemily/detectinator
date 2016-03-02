@@ -3,7 +3,8 @@ set outDir viv
 
 create_project detectinator $outDir -part xc7a100tcsg324-1 -force
 
-add_files -norecurse $srcDir/top.v
+add_files -fileset sources_1 -norecurse $srcDir/top.v
+add_files -fileset constrs_1 -norecurse $srcDir/timing.xdc
 update_compile_order -fileset sources_1
 
 synth_design -rtl -name rtl_1
