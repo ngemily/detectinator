@@ -3,7 +3,6 @@ Detectinator
 
 About
 -----
-
 Hardware implementation of [opencv-object-detection][1] object detecting
 software.
 
@@ -11,8 +10,24 @@ software.
 
 Quick Start
 -----------
-Run simulation
+Run simulation in Modelsim.  The testbench reads a bitmap from `imgs/` (defined
+in `src/global.vh` and writes the processed image to a bitmap in `out/`.  The
+output should be readable by any image viewer.
 
     vsim -c -do run_sim.do
 
-This project is not yet setup for synthesis.
+To pull up gui:
+
+    vsim -do run_sim.do
+
+
+Vivado Flow
+-----------
+Run through synthesis, implementation in Vivado.  Writes post-synth and
+post-impl netlists.  A vivado project is created in the directory `viv/`.
+
+    vivado -mode batch -source vivado.tcl
+
+To pull up gui, run above command and
+
+    vivado $(find . -type f -name '*.xpr')
