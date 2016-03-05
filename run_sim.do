@@ -1,3 +1,5 @@
+file mkdir out
+
 vlib work
 
 vlog src/top.v
