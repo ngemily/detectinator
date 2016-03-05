@@ -7,4 +7,7 @@
 `define WORD_SIZE 8
 `define PIXEL_SIZE 24
 
+`define IFILE "imgs/balloon.bmp"
+`define OFILE "out/out.bmp"
+
 `endif
