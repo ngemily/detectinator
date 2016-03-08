@@ -3,6 +3,8 @@
 `include "utils.sv"
 `include "tasks.sv"
 
+`timescale 1ns/100ps
+
 module tb();
     integer ifh, ofh;
 
