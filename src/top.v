@@ -4,10 +4,10 @@
 `define MAX 255
 `define MIN 0
 
-module top #(
-    parameter width = 1,
-    parameter height = 1
-) (
+`define FRAME_WIDTH 297     // 0x129
+`define FRAME_HEIGHT 1
+
+module top (
     input clk,
     input reset,
     input en,
@@ -42,9 +42,9 @@ module top #(
     // Shift in one pixel every clock cycle into three cascading buffers.
     always @(posedge clk) begin
         buf0[0] <= I;
-        buf1[0] <= buf0[width - 1];
-        buf2[0] <= buf1[width - 1];
-        for(i = 1; i < width; i = i + 1) begin
+        buf1[0] <= buf0[`FRAME_WIDTH - 1];
+        buf2[0] <= buf1[`FRAME_WIDTH - 1];
+        for(i = 1; i < `FRAME_WIDTH; i = i + 1) begin
             buf2[i] <= buf2[i - 1];
             buf1[i] <= buf1[i - 1];
             buf0[i] <= buf0[i - 1];
@@ -57,15 +57,15 @@ module top #(
     // ***----------        <buf1>
     // ***                  <buf0>
     sobel_window U0 (
-        .p1(buf2[width - 1]),
-        .p2(buf2[width - 2]),
-        .p3(buf2[width - 3]),
-        .p4(buf1[width - 1]),
-        .p5(buf1[width - 2]),
-        .p6(buf1[width - 3]),
-        .p7(buf0[width - 1]),
-        .p8(buf0[width - 2]),
-        .p9(buf0[width - 3]),
+        .p1(buf2[`FRAME_WIDTH - 1]),
+        .p2(buf2[`FRAME_WIDTH - 2]),
+        .p3(buf2[`FRAME_WIDTH - 3]),
+        .p4(buf1[`FRAME_WIDTH - 1]),
+        .p5(buf1[`FRAME_WIDTH - 2]),
+        .p6(buf1[`FRAME_WIDTH - 3]),
+        .p7(buf0[`FRAME_WIDTH - 1]),
+        .p8(buf0[`FRAME_WIDTH - 2]),
+        .p9(buf0[`FRAME_WIDTH - 3]),
         .q(window_out)
     );
 

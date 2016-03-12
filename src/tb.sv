@@ -32,10 +32,7 @@ module tb();
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
 
     // Instantiate the Unit Under Test (DUT)
-    top #(
-        .width(32'h129),
-        .height(0)
-    ) dut (
+    top dut (
         .clk(clk),
         .reset(reset),
         .en(en),
