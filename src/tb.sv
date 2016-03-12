@@ -10,7 +10,7 @@ module tb();
 
     // Inputs
     reg clk;
-    reg reset;
+    reg reset_n;
     reg en;
     reg [`PIXEL_SIZE - 1:0] data;
 
@@ -34,7 +34,7 @@ module tb();
     // Instantiate the Unit Under Test (DUT)
     top dut (
         .clk(clk),
-        .reset(reset),
+        .reset_n(reset_n),
         .en(en),
         .hsync(hsync),
         .vsync(vsync),
@@ -48,15 +48,15 @@ module tb();
     initial begin
         // Initialize inputs
         clk = 0;
-        reset = 0;
+        reset_n = 0;
         count = 0;
         en = 0;
         hsync = 0;
         vsync = 0;
 
-        // Take out of reset.
+        // Take out of reset
         #20
-        reset = 1;
+        reset_n = 1;
         en = 1;
         data = 0;
 

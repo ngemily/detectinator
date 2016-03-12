@@ -9,7 +9,7 @@
 
 module top (
     input clk,
-    input reset,
+    input reset_n,
     input en,
     input hsync,
     input vsync,
@@ -91,7 +91,7 @@ module top (
     // Run connected components on the output stream from Sobel.
     connected_components_labeling U2 (
         .clk(clk),
-        .reset(reset),
+        .reset_n(reset_n),
         .A(buf4[`FRAME_WIDTH - 1]),
         .B(buf4[`FRAME_WIDTH - 2]),
         .C(buf4[`FRAME_WIDTH - 3]),
@@ -187,7 +187,7 @@ endmodule
 */
 module connected_components_labeling(
     input clk,
-    input reset,
+    input reset_n,
     input [`WORD_SIZE - 1:0] A,
     input [`WORD_SIZE - 1:0] B,
     input [`WORD_SIZE - 1:0] C,
@@ -206,7 +206,7 @@ module connected_components_labeling(
     wire [`WORD_SIZE - 1:0] min_label;
 
     always @(posedge clk) begin
-        if (~reset) begin
+        if (~reset_n) begin
             num_labels <= 0;
         end else if (is_new_label) begin
             num_labels <= num_labels + 1;
