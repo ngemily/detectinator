@@ -1,4 +1,5 @@
 # Modelsim
+modelsim.ini
 transcript
 work/*
 *.wlf
