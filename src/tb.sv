@@ -14,10 +14,13 @@ module tb();
     reg en;
     reg [`PIXEL_SIZE - 1:0] data;
 
-    // Outputs
-    wire [`PIXEL_SIZE - 1:0] out;
-
     // Internal
+    wire [`PIXEL_SIZE - 1:0] label;
+
+    // Outputs
+    reg [`PIXEL_SIZE - 1:0] out;
+
+    // Metadata
     integer width;
     integer height;
     integer size_of_data;
@@ -30,6 +33,7 @@ module tb();
     reg vsync;
 
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
+    reg [`PIXEL_SIZE - 1:0] color_table[0:`C_TABLE_SIZE];
 
     // Instantiate the Unit Under Test (DUT)
     top dut (
@@ -39,7 +43,7 @@ module tb();
         .hsync(hsync),
         .vsync(vsync),
         .data(data),
-        .out(out)
+        .out(label)
     );
 
     // =======================
@@ -83,6 +87,9 @@ module tb();
             .mem(mem)
         );
 
+        // Read externally generated color table.
+        $readmemh(`CFILE, color_table);
+
     end
 
     // ====================
@@ -119,24 +126,23 @@ module tb();
     // Test logic
     //-----------
     always @ (posedge clk) begin
+        /***** Input stimulus *****/
         data = {mem[count + 2], mem[count + 1], mem[count + 0]};
-        //$display("0x%x", out);
-        mem[count + 0] = out[7:0];
-        mem[count + 1] = out[7:0];
-        mem[count + 2] = out[7:0];
 
         if (count % (width * bytes_per_pixel) == 0) begin
             hsync = 1;
         end else begin
             hsync = 0;
         end
-`ifdef DEBUG
-        if (count < 24) begin
-            $display("tb: %u: %u", count + 0, mem[count + 0]);
-            $display("tb: %u: %u", count + 1, mem[count + 1]);
-            $display("tb: %u: %u", count + 2, mem[count + 2]);
-        end
-`endif
+
+        /***** Output verification *****/
+        out = color_table[label[7:0]];
+
+        mem[count + 0] = out[7:0];
+        mem[count + 1] = out[15:8];
+        mem[count + 2] = out[23:16];
+
+        /***** Test bench logic *****/
         count += 3;
     end
 
