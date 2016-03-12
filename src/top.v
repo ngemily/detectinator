@@ -21,35 +21,45 @@ module top (
     wire [`WORD_SIZE - 1:0] B = data[23:16];
     wire [`WORD_SIZE - 1:0] I;
 
-    // Keep three buffers, for the last three rows.
+    // Row buffers
+    reg [`WORD_SIZE - 1:0] buf4 [1024:0];
+    reg [`WORD_SIZE - 1:0] buf3 [1024:0];
     reg [`WORD_SIZE - 1:0] buf2 [1024:0];
     reg [`WORD_SIZE - 1:0] buf1 [1024:0];
     reg [`WORD_SIZE - 1:0] buf0 [1024:0];
 
     // Intermediate stages of output
-    wire [`WORD_SIZE - 1:0] window_out;
+    wire [`WORD_SIZE - 1:0] sobel_window_out;
     wire [`WORD_SIZE - 1:0] threshold_out;
+    wire [`WORD_SIZE - 1:0] cc_out;
 
     integer i;
-
-    rgb2i U1(
-        .R(R),
-        .G(G),
-        .B(B),
-        .I(I)
-    );
 
     // Shift in one pixel every clock cycle into three cascading buffers.
     always @(posedge clk) begin
         buf0[0] <= I;
         buf1[0] <= buf0[`FRAME_WIDTH - 1];
         buf2[0] <= buf1[`FRAME_WIDTH - 1];
+
+        buf3[0] <= cc_out;
+        buf4[0] <= buf3[`FRAME_WIDTH - 1];
+
         for(i = 1; i < `FRAME_WIDTH; i = i + 1) begin
+            buf4[i] <= buf4[i - 1];
+            buf3[i] <= buf3[i - 1];
             buf2[i] <= buf2[i - 1];
             buf1[i] <= buf1[i - 1];
             buf0[i] <= buf0[i - 1];
         end
     end
+
+    // 24-bit RGB intput to 8-bit Intensity (grayscale)
+    rgb2i U1(
+        .R(R),
+        .G(G),
+        .B(B),
+        .I(I)
+    );
 
     // Perform Sobel on a sliding window
     //
@@ -66,19 +76,31 @@ module top (
         .p7(buf0[`FRAME_WIDTH - 1]),
         .p8(buf0[`FRAME_WIDTH - 2]),
         .p9(buf0[`FRAME_WIDTH - 3]),
-        .q(window_out)
+        .q(sobel_window_out)
     );
 
+    // Threshold Sobel output to get a binary image.
     threshold #(
         .WIDTH(`WORD_SIZE)
     )
     U3 (
-        .d(window_out),
+        .d(sobel_window_out),
         .q(threshold_out)
     );
 
-    assign out = {3{threshold_out}};
+    // Run connected components on the output stream from Sobel.
+    connected_components_labeling U2 (
+        .clk(clk),
+        .reset(reset),
+        .A(buf4[`FRAME_WIDTH - 1]),
+        .B(buf4[`FRAME_WIDTH - 2]),
+        .C(buf4[`FRAME_WIDTH - 3]),
+        .D(buf3[`FRAME_WIDTH - 1]),
+        .data(threshold_out),
+        .q(cc_out)
+    );
 
+    assign out = {sobel_window_out, threshold_out, cc_out};
 endmodule
 
 /**
@@ -149,4 +171,73 @@ module sobel_window(
     assign abs_dy = (dy < 0) ? -dy : dy;
 
     assign q = abs_dx + abs_dy;
+endmodule
+
+/**
+* Connected components labeling
+*
+* Expected input:
+*   +---+---+---+
+*   | A | B | C |
+*   +---+---+
+*   | D | p |
+*   +---+---+
+*
+* Output labelled image.
+*/
+module connected_components_labeling(
+    input clk,
+    input reset,
+    input [`WORD_SIZE - 1:0] A,
+    input [`WORD_SIZE - 1:0] B,
+    input [`WORD_SIZE - 1:0] C,
+    input [`WORD_SIZE - 1:0] D,
+    input [`WORD_SIZE - 1:0] data,
+    output [`WORD_SIZE - 1:0] q
+);
+    reg [`WORD_SIZE - 1:0] num_labels;
+
+    wire is_background;
+    wire is_new_label;
+    wire copy_a;
+    wire copy_b;
+    wire copy_c;
+    wire copy_d;
+    wire [`WORD_SIZE - 1:0] min_label;
+
+    always @(posedge clk) begin
+        if (~reset) begin
+            num_labels <= 0;
+        end else if (is_new_label) begin
+            num_labels <= num_labels + 1;
+        end
+    end
+
+    assign is_background = ~data;
+    assign is_new_label = ~(A | B | C | D) && ~is_background;
+    assign copy_a = (A == B || ~B)
+        && (A == C || ~C)
+        && (A == D || ~D);
+    assign copy_b = (B == A || ~A)
+        && (B == C || ~C)
+        && (B == D || ~D);
+    assign copy_c = (C == B || ~B)
+        && (C == A || ~A)
+        && (C == D || ~D);
+    assign copy_d = (D == B || ~B)
+        && (D == C || ~C)
+        && (D == A || ~A);
+    assign min_label = (A && (A < B || ~B) && (A < C || ~C) && (A < D || ~D)) ? A :
+        (B && (B < A || ~A) && (B < C || ~C) && (B < D || ~D)) ? B :
+        (C && (C < B || ~B) && (C < A || ~A) && (C < D || ~D)) ? C :
+        (D && (D < B || ~B) && (D < C || ~C) && (D < A || ~A)) ? D :
+                                                                    0;
+
+    assign q = (is_background) ? 0 :
+        (is_new_label) ? num_labels :
+        (copy_a)                      ? A :
+        (copy_b)                      ? B :
+        (copy_c)                      ? C :
+        (copy_d)                      ? D :
+                                 255 ;
 endmodule
