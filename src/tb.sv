@@ -48,15 +48,15 @@ module tb();
     initial begin
         // Initialize inputs
         clk = 0;
-        reset = 1;
+        reset = 0;
         count = 0;
         en = 0;
         hsync = 0;
         vsync = 0;
 
-        // Deassert reset
+        // Take out of reset.
         #20
-        reset = 0;
+        reset = 1;
         en = 1;
         data = 0;
 
@@ -122,8 +122,8 @@ module tb();
         data = {mem[count + 2], mem[count + 1], mem[count + 0]};
         //$display("0x%x", out);
         mem[count + 0] = out[7:0];
-        mem[count + 1] = out[15:8];
-        mem[count + 2] = out[23:16];
+        mem[count + 1] = out[7:0];
+        mem[count + 2] = out[7:0];
 
         if (count % (width * bytes_per_pixel) == 0) begin
             hsync = 1;
