@@ -92,11 +92,11 @@ task read_bmp_head(
     // Bitmaps pad end of row to 4 bytes
     bytes_per_pixel = bits_per_pixel / 8;
     bytes_per_row = width * bytes_per_pixel / 8;
-    padding = 4 - bytes_per_row % 4;
+    padding = 4 - (bytes_per_row % 4);
 
-    $display("%20s %u", "bytes_per_pixel", bytes_per_pixel);
-    $display("%20s %u", "bytes_per_row", bytes_per_row);
-    $display("%20s %u", "padding", padding);
+    $display("%20s %d", "bytes_per_pixel", bytes_per_pixel);
+    $display("%20s %d", "bytes_per_row", bytes_per_row);
+    $display("%20s %d", "padding", padding);
 
     // Seek to data. read pixel data.
     r = $fseek(ifh, offset_to_data, 0);
