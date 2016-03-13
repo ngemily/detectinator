@@ -230,6 +230,13 @@ module connected_components_labeling(
     wire copy_b;
     wire copy_c;
     wire copy_d;
+
+    wire [`WORD_SIZE - 1:0] _A;
+    wire [`WORD_SIZE - 1:0] _B;
+    wire [`WORD_SIZE - 1:0] _C;
+    wire [`WORD_SIZE - 1:0] _D;
+    wire [`WORD_SIZE - 1:0] min_label_a;
+    wire [`WORD_SIZE - 1:0] min_label_b;
     wire [`WORD_SIZE - 1:0] min_label;
 
     always @(posedge clk) begin
@@ -254,11 +261,14 @@ module connected_components_labeling(
     assign copy_d = (D == B || ~B)
         && (D == C || ~C)
         && (D == A || ~A);
-    assign min_label = (A && (A < B || ~B) && (A < C || ~C) && (A < D || ~D)) ? A :
-        (B && (B < A || ~A) && (B < C || ~C) && (B < D || ~D)) ? B :
-        (C && (C < B || ~B) && (C < A || ~A) && (C < D || ~D)) ? C :
-        (D && (D < B || ~B) && (D < C || ~C) && (D < A || ~A)) ? D :
-                                                                    0;
+
+    assign _A = (A == 0) ? `MAX : A;
+    assign _B = (B == 0) ? `MAX : B;
+    assign _C = (C == 0) ? `MAX : C;
+    assign _D = (D == 0) ? `MAX : D;
+    assign min_label_a = (_A < _B) ? _A : _B;
+    assign min_label_b = (_C < _D) ? _C : _D;
+    assign min_label = (min_label_a < min_label_b) ? min_label_a : min_label_b;
 
     assign q = (is_background) ? 0 :
         (is_new_label) ? num_labels :
@@ -266,5 +276,5 @@ module connected_components_labeling(
         (copy_b)                      ? B :
         (copy_c)                      ? C :
         (copy_d)                      ? D :
-                                 255 ;
+                                 min_label ;
 endmodule
