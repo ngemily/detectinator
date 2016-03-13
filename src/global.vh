@@ -9,7 +9,7 @@
 `define WORD_SIZE 8
 `define PIXEL_SIZE 24
 
-`define IFILE "imgs/balloon.bmp"
+`define IFILE "imgs/alien.bmp"
 `define OFILE "out/out.bmp"
 `define CFILE "src/colors.txt"
 

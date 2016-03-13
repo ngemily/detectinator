@@ -1,10 +1,10 @@
 `include "global.vh"
 
-`define THRESHOLD 150
+`define THRESHOLD 50
 `define MAX 255
 `define MIN 0
 
-`define FRAME_WIDTH 297     // 0x129
+`define FRAME_WIDTH 550     //0x226
 `define FRAME_HEIGHT 1
 
 module top (
