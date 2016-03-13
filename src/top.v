@@ -68,12 +68,11 @@ module top (
         buf1[0] <= buf0[`FRAME_WIDTH - 1];
         buf2[0] <= buf1[`FRAME_WIDTH - 1];
 
-        buf3[0] <= cc_out;
+        buf3[`FRAME_WIDTH - 1] <= cc_out;
         buf4[0] <= buf3[`FRAME_WIDTH - 1];
 
         for(i = 1; i < `FRAME_WIDTH; i = i + 1) begin
             buf4[i] <= buf4[i - 1];
-            buf3[i] <= buf3[i - 1];
             buf2[i] <= buf2[i - 1];
             buf1[i] <= buf1[i - 1];
             buf0[i] <= buf0[i - 1];
@@ -241,26 +240,26 @@ module connected_components_labeling(
 
     always @(posedge clk) begin
         if (~reset_n) begin
-            num_labels <= 0;
+            num_labels <= 1;        // 0 is reserved
         end else if (is_new_label) begin
             num_labels <= num_labels + 1;
         end
     end
 
-    assign is_background = ~data;
-    assign is_new_label = ~(A | B | C | D) && ~is_background;
-    assign copy_a = (A == B || ~B)
-        && (A == C || ~C)
-        && (A == D || ~D);
-    assign copy_b = (B == A || ~A)
-        && (B == C || ~C)
-        && (B == D || ~D);
-    assign copy_c = (C == B || ~B)
-        && (C == A || ~A)
-        && (C == D || ~D);
-    assign copy_d = (D == B || ~B)
-        && (D == C || ~C)
-        && (D == A || ~A);
+    assign is_background = !data;
+    assign is_new_label = !(A | B | C | D) && !is_background;
+    assign copy_a = (A == B || !B)
+        && (A == C || !C)
+        && (A == D || !D);
+    assign copy_b = (B == A || !A)
+        && (B == C || !C)
+        && (B == D || !D);
+    assign copy_c = (C == B || !B)
+        && (C == A || !A)
+        && (C == D || !D);
+    assign copy_d = (D == B || !B)
+        && (D == C || !C)
+        && (D == A || !A);
 
     assign _A = (A == 0) ? `MAX : A;
     assign _B = (B == 0) ? `MAX : B;
