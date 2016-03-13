@@ -96,7 +96,7 @@ module tb();
     // Termination sequence
     // ====================
     initial begin
-        #2_000_000
+        #3_000_000
 
         // Write bitmap
         write_bmp_head(ifh, ofh);
@@ -136,7 +136,9 @@ module tb();
         end
 
         /***** Output verification *****/
-        out = color_table[label[7:0]];
+        out = color_table[label[7:0]];      // cc output
+        //out = { 3{label[15:8]} };         // threshold output
+        //out = { 3{label[23:16]} };        // sobel output
 
         mem[count + 0] = out[7:0];
         mem[count + 1] = out[15:8];
