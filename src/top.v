@@ -16,10 +16,11 @@ module top (
     input [`PIXEL_SIZE - 1:0] data,
     output [`PIXEL_SIZE - 1:0] out
 );
-    wire [`WORD_SIZE - 1:0] R = data[7:0];
-    wire [`WORD_SIZE - 1:0] G = data[15:8];
-    wire [`WORD_SIZE - 1:0] B = data[23:16];
-    wire [`WORD_SIZE - 1:0] I;
+    /*  Internal registers */
+    // Location of current pixel
+    reg [31:0] x;
+    reg [31:0] y;
+    reg [31:0] frame;
 
     // Row buffers
     reg [`WORD_SIZE - 1:0] buf4 [1024:0];
@@ -28,12 +29,38 @@ module top (
     reg [`WORD_SIZE - 1:0] buf1 [1024:0];
     reg [`WORD_SIZE - 1:0] buf0 [1024:0];
 
+    /*  Internal signals */
+    wire [`WORD_SIZE - 1:0] R = data[7:0];
+    wire [`WORD_SIZE - 1:0] G = data[15:8];
+    wire [`WORD_SIZE - 1:0] B = data[23:16];
+
     // Intermediate stages of output
+    wire [`WORD_SIZE - 1:0] I;
     wire [`WORD_SIZE - 1:0] sobel_window_out;
     wire [`WORD_SIZE - 1:0] threshold_out;
     wire [`WORD_SIZE - 1:0] cc_out;
 
     integer i;
+
+    // Update location using HSYNC and VSYNC
+    always @(posedge clk) begin
+        if (~reset_n) begin
+            x <= 0;
+            y <= 0;
+            frame <= 0;
+        end else if (hsync) begin
+            // new row
+            x <= 0;
+            y <= y + 1;
+        end else if (vsync) begin
+            // new frame
+            x <= 0;
+            y <= 0;
+            frame <= frame + 1;
+        end else begin
+            x <= x + 1;
+        end
+    end
 
     // Shift in one pixel every clock cycle into three cascading buffers.
     always @(posedge clk) begin
