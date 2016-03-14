@@ -31,3 +31,8 @@ post-impl netlists.  A vivado project is created in the directory `viv/`.
 To pull up gui, run above command and
 
     vivado $(find . -type f -name '*.xpr')
+
+Debugging
+---------
+Output a bitmap as hex, grouped by pixel
+	xxd -cols 12 -g 3 -s 0x0000008a out.bmp out.xxd
