@@ -3,6 +3,7 @@ modelsim.ini
 transcript
 work/*
 *.wlf
+wave*
 
 # Outputs
 *.xxd
