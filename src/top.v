@@ -230,6 +230,7 @@ module connected_components_labeling(
     output [`WORD_SIZE - 1:0] q
 );
     reg [`WORD_SIZE - 1:0] num_labels;
+    reg [`WORD_SIZE - 1:0] merge_table [0 : `MAX];
 
     wire is_background;
     wire is_new_label;
@@ -237,6 +238,7 @@ module connected_components_labeling(
     wire copy_b;
     wire copy_c;
     wire copy_d;
+    wire merge;
 
     wire [`WORD_SIZE - 1:0] _A;
     wire [`WORD_SIZE - 1:0] _B;
@@ -249,8 +251,10 @@ module connected_components_labeling(
     always @(posedge clk) begin
         if (~reset_n) begin
             num_labels <= 1;        // 0 is reserved
+            merge_table[0] <= 255;  // merge_table[0] should NEVER be looked up
         end else if (is_new_label) begin
             num_labels <= num_labels + 1;
+            merge_table[num_labels] <= num_labels;
         end
     end
 
@@ -272,7 +276,9 @@ module connected_components_labeling(
         && (D == B || !B)
         && (D == C || !C)
         && (D == A || !A);
+    assign merge = !(is_background | is_new_label | copy_a | copy_b | copy_d);
 
+    // find min label
     assign _A = (A == 0) ? `MAX : A;
     assign _B = (B == 0) ? `MAX : B;
     assign _C = (C == 0) ? `MAX : C;
@@ -281,11 +287,30 @@ module connected_components_labeling(
     assign min_label_b = (_C < _D) ? _C : _D;
     assign min_label = (min_label_a < min_label_b) ? min_label_a : min_label_b;
 
+    // TODO push entries onto merge stack.  For now, chain merge entries.
+    always @(posedge clk) begin
+        if (merge) begin
+            if (A && A != min_label) begin
+                merge_table[A] = merge_table[min_label];
+            end
+            if (B && B != min_label) begin
+                merge_table[B] = merge_table[min_label];
+            end
+            if (C && C != min_label) begin
+                merge_table[C] = merge_table[min_label];
+            end
+            if (D && D != min_label) begin
+                merge_table[D] = merge_table[min_label];
+            end
+        end
+    end
+
+    // assign label
     assign q = (is_background) ? 0 :
         (is_new_label) ? num_labels :
-        (copy_a)                      ? A :
-        (copy_b)                      ? B :
-        (copy_c)                      ? C :
-        (copy_d)                      ? D :
-                                 min_label ;
+        (copy_a)                      ? merge_table[A] :
+        (copy_b)                      ? merge_table[B] :
+        (copy_c)                      ? merge_table[C] :
+        (copy_d)                      ? merge_table[D] :
+                                 merge_table[min_label] ;
 endmodule
