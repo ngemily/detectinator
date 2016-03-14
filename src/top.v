@@ -23,11 +23,12 @@ module top (
     reg [31:0] frame;
 
     // Row buffers
-    reg [`WORD_SIZE - 1:0] buf4 [1024:0];
-    reg [`WORD_SIZE - 1:0] buf3 [1024:0];
-    reg [`WORD_SIZE - 1:0] buf2 [1024:0];
-    reg [`WORD_SIZE - 1:0] buf1 [1024:0];
-    reg [`WORD_SIZE - 1:0] buf0 [1024:0];
+    reg [`WORD_SIZE - 1:0] buf4 [`FRAME_WIDTH - 1:0];
+    reg [`WORD_SIZE - 1:0] buf3 [`FRAME_WIDTH - 1:`FRAME_WIDTH - 1];
+
+    reg [`WORD_SIZE - 1:0] buf2 [`FRAME_WIDTH - 1:0];
+    reg [`WORD_SIZE - 1:0] buf1 [`FRAME_WIDTH - 1:0];
+    reg [`WORD_SIZE - 1:0] buf0 [`FRAME_WIDTH - 1: `FRAME_WIDTH - 3];
 
     /*  Internal signals */
     wire [`WORD_SIZE - 1:0] R = data[7:0];
@@ -62,20 +63,27 @@ module top (
         end
     end
 
-    // Shift in one pixel every clock cycle into three cascading buffers.
+    // Shift in one pixel every clock cycle into cascading buffers.
     always @(posedge clk) begin
-        buf0[0] <= I;
+        // Input to Sobel
+        buf0[`FRAME_WIDTH - 3] <= I;
+        buf0[`FRAME_WIDTH - 2] <= buf0[`FRAME_WIDTH - 3];
+        buf0[`FRAME_WIDTH - 1] <= buf0[`FRAME_WIDTH - 2];
+
+        // Input to connected components
+        buf3[`FRAME_WIDTH - 1] <= cc_out;
+
+        // Cascade
         buf1[0] <= buf0[`FRAME_WIDTH - 1];
         buf2[0] <= buf1[`FRAME_WIDTH - 1];
 
-        buf3[`FRAME_WIDTH - 1] <= cc_out;
         buf4[0] <= buf3[`FRAME_WIDTH - 1];
 
+        // Shift
         for(i = 1; i < `FRAME_WIDTH; i = i + 1) begin
             buf4[i] <= buf4[i - 1];
             buf2[i] <= buf2[i - 1];
             buf1[i] <= buf1[i - 1];
-            buf0[i] <= buf0[i - 1];
         end
     end
 
