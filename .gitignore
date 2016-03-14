@@ -1,13 +1,14 @@
+# Outputs
+*.mem
+*.xxd
+out/*
+
 # Modelsim
 modelsim.ini
 transcript
 work/*
 *.wlf
 wave*
-
-# Outputs
-*.xxd
-out/*
 
 # Vivado
 viv/*
