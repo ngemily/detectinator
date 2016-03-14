@@ -256,16 +256,20 @@ module connected_components_labeling(
 
     assign is_background = !data;
     assign is_new_label = !(A | B | C | D) && !is_background;
-    assign copy_a = (A == B || !B)
+    assign copy_a = A
+        && (A == B || !B)
         && (A == C || !C)
         && (A == D || !D);
-    assign copy_b = (B == A || !A)
+    assign copy_b = B
+        && (B == A || !A)
         && (B == C || !C)
         && (B == D || !D);
-    assign copy_c = (C == B || !B)
+    assign copy_c = C
+        && (C == B || !B)
         && (C == A || !A)
         && (C == D || !D);
-    assign copy_d = (D == B || !B)
+    assign copy_d =  D
+        && (D == B || !B)
         && (D == C || !C)
         && (D == A || !A);
 
