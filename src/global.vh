@@ -18,4 +18,6 @@
 `define FRAME_WIDTH 550     //0x226
 `define FRAME_HEIGHT 1
 
+`define THRESHOLD 50
+
 `endif

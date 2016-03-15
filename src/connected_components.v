@@ -125,37 +125,3 @@ module connected_components_labeling(
         (copy_d)                      ? merge_table[D] :
                                  merge_table[min_label] ;
 endmodule
-
-module max4 #(
-    parameter WIDTH = `WORD_SIZE
-) (
-    input [WIDTH - 1:0] A,
-    input [WIDTH - 1:0] B,
-    input [WIDTH - 1:0] C,
-    input [WIDTH - 1:0] D,
-    output [WIDTH - 1:0] max
-);
-    wire [WIDTH - 1:0] max_a;
-    wire [WIDTH - 1:0] max_b;
-
-    assign max_a = (A > B) ? A : B;
-    assign max_b = (C > D) ? C : D;
-    assign max = (max_a > max_b) ? max_a : max_b;
-endmodule
-
-module min4 #(
-    parameter WIDTH = `WORD_SIZE
-) (
-    input [WIDTH - 1:0] A,
-    input [WIDTH - 1:0] B,
-    input [WIDTH - 1:0] C,
-    input [WIDTH - 1:0] D,
-    output [WIDTH - 1:0] min
-);
-    wire [WIDTH - 1:0] min_a;
-    wire [WIDTH - 1:0] min_b;
-
-    assign min_a = (A < B) ? A : B;
-    assign min_b = (C < D) ? C : D;
-    assign min = (min_a < min_b) ? min_a : min_b;
-endmodule
