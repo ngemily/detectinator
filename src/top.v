@@ -44,41 +44,45 @@ module top (
             x <= 0;
             y <= 0;
             frame <= 0;
-        end else if (hsync) begin
-            // new row
-            x <= 0;
-            y <= y + 1;
-        end else if (vsync) begin
-            // new frame
-            x <= 0;
-            y <= 0;
-            frame <= frame + 1;
-        end else begin
-            x <= x + 1;
+        end else if (en) begin
+            if (hsync) begin
+                // new row
+                x <= 0;
+                y <= y + 1;
+            end else if (vsync) begin
+                // new frame
+                x <= 0;
+                y <= 0;
+                frame <= frame + 1;
+            end else begin
+                x <= x + 1;
+            end
         end
     end
 
     // Shift in one pixel every clock cycle into cascading buffers.
     always @(posedge clk) begin
-        // Input to Sobel
-        buf0[`FRAME_WIDTH - 3] <= I;
-        buf0[`FRAME_WIDTH - 2] <= buf0[`FRAME_WIDTH - 3];
-        buf0[`FRAME_WIDTH - 1] <= buf0[`FRAME_WIDTH - 2];
+        if (en) begin
+            // Input to Sobel
+            buf0[`FRAME_WIDTH - 3] <= I;
+            buf0[`FRAME_WIDTH - 2] <= buf0[`FRAME_WIDTH - 3];
+            buf0[`FRAME_WIDTH - 1] <= buf0[`FRAME_WIDTH - 2];
 
-        // Input to connected components
-        buf3[`FRAME_WIDTH - 1] <= cc_out;
+            // Input to connected components
+            buf3[`FRAME_WIDTH - 1] <= cc_out;
 
-        // Cascade
-        buf1[0] <= buf0[`FRAME_WIDTH - 1];
-        buf2[0] <= buf1[`FRAME_WIDTH - 1];
+            // Cascade
+            buf1[0] <= buf0[`FRAME_WIDTH - 1];
+            buf2[0] <= buf1[`FRAME_WIDTH - 1];
 
-        buf4[0] <= buf3[`FRAME_WIDTH - 1];
+            buf4[0] <= buf3[`FRAME_WIDTH - 1];
 
-        // Shift
-        for(i = 1; i < `FRAME_WIDTH; i = i + 1) begin
-            buf4[i] <= buf4[i - 1];
-            buf2[i] <= buf2[i - 1];
-            buf1[i] <= buf1[i - 1];
+            // Shift
+            for(i = 1; i < `FRAME_WIDTH; i = i + 1) begin
+                buf4[i] <= buf4[i - 1];
+                buf2[i] <= buf2[i - 1];
+                buf1[i] <= buf1[i - 1];
+            end
         end
     end
 
@@ -118,6 +122,7 @@ module top (
     connected_components_labeling U2 (
         .clk(clk),
         .reset_n(reset_n),
+        .en(en),
         .A(buf4[`FRAME_WIDTH - 1]),
         .B(buf4[`FRAME_WIDTH - 2]),
         .C(buf4[`FRAME_WIDTH - 3]),

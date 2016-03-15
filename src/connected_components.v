@@ -15,6 +15,7 @@
 module connected_components_labeling(
     input clk,
     input reset_n,
+    input en,
     input [`WORD_SIZE - 1:0] A,
     input [`WORD_SIZE - 1:0] B,
     input [`WORD_SIZE - 1:0] C,
@@ -67,13 +68,15 @@ module connected_components_labeling(
         if (~reset_n) begin
             num_labels <= 1;        // 0 is reserved
             merge_table[0] <= 255;  // merge_table[0] should NEVER be looked up
-        end else if (is_new_label) begin
-            num_labels <= num_labels + 1;
-            merge_table[num_labels] <= num_labels;
-        end else if (merge) begin
-            // TODO push entries onto merge stack.  For now, chain merge entries.
-            num_labels <= num_labels;
-            merge_table[max_label] <= merge_table[min_label];
+        end else if (en) begin
+            if (is_new_label) begin
+                num_labels <= num_labels + 1;
+                merge_table[num_labels] <= num_labels;
+            end else if (merge) begin
+                // TODO push entries onto merge stack.  For now, chain merge entries.
+                num_labels <= num_labels;
+                merge_table[max_label] <= merge_table[min_label];
+            end
         end
     end
 
