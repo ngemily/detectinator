@@ -90,6 +90,19 @@ module tb();
         // Read externally generated color table.
         $readmemh(`CFILE, color_table);
 
+        #30_000
+        // Error checking
+        $monitor("ERROR: %d ns min and max label match on a merge %b",
+            $time, dut.U2.merge && (dut.U2.min_label == dut.U2.max_label));
+        $monitor("ERROR: %d ns A neither min nor max on a merge %b",
+            $time, dut.U2.merge && (dut.U2.A && dut.U2.A != dut.U2.min_label && dut.U2.A != dut.U2.max_label));
+        $monitor("ERROR: %d ns B neither min nor max on a merge %b",
+            $time, dut.U2.merge && (dut.U2.B && dut.U2.B != dut.U2.min_label && dut.U2.B != dut.U2.max_label));
+        $monitor("ERROR: %d ns C neither min nor max on a merge %b",
+            $time, dut.U2.merge && (dut.U2.C && dut.U2.C != dut.U2.min_label && dut.U2.C != dut.U2.max_label));
+        $monitor("ERROR: %d ns D neither min nor max on a merge %b",
+            $time, dut.U2.merge && (dut.U2.D && dut.U2.D != dut.U2.min_label && dut.U2.D != dut.U2.max_label));
+
     end
 
     // ====================
