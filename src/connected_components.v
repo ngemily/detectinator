@@ -70,6 +70,10 @@ module connected_components_labeling(
         end else if (is_new_label) begin
             num_labels <= num_labels + 1;
             merge_table[num_labels] <= num_labels;
+        end else if (merge) begin
+            // TODO push entries onto merge stack.  For now, chain merge entries.
+            num_labels <= num_labels;
+            merge_table[max_label] <= merge_table[min_label];
         end
     end
 
@@ -101,25 +105,6 @@ module connected_components_labeling(
 
     min4 M0(_A, _B, _C, _D, min_label);
     max4 M1(A, B, C, D, max_label);
-
-    // TODO push entries onto merge stack.  For now, chain merge entries.
-    always @(posedge clk) begin
-        if (merge) begin
-            if (A && A != min_label) begin
-                merge_table[A] = merge_table[min_label];
-            end
-            if (B && B != min_label) begin
-                merge_table[B] = merge_table[min_label];
-            end
-            if (C && C != min_label) begin
-                merge_table[C] = merge_table[min_label];
-            end
-            if (D && D != min_label) begin
-                merge_table[D] = merge_table[min_label];
-            end
-        end
-    end
-
 
     // Assumption: Only two distinct non-zero labels.
     assign stack_entry = {max_label, min_label};
