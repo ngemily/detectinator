@@ -9,8 +9,8 @@ module stack (
     full
 );
 
-    parameter WIDTH = 11;
-    parameter DEPTH = 7;
+    parameter WIDTH = 32;
+    parameter DEPTH = 8;
 
     input                    clk;
     input                    reset;
@@ -22,27 +22,48 @@ module stack (
     output                   full;
 
     reg [DEPTH - 1:0] ptr;
-    reg [WIDTH - 1:0] mem [0:(1 << DEPTH) - 1];
+    reg [WIDTH - 1:0] mem [0:DEPTH - 1];
 
     always @(posedge clk) begin
-        if (reset)
+        if (reset) begin
             ptr <= 0;
-        else if (push)
-            ptr <= ptr + 1;
-        else if (pop)
-            ptr <= ptr - 1;
-    end
-
-    always @(posedge clk) begin
-        if (push || pop) begin
-            if(push)
-                mem[ptr] <= q;
-
-            q <= mem[ptr - 1];
+        end else begin
+            if (push) begin
+                mem[ptr] <= d;
+                ptr <= ptr + 1;
+                q <= 0;
+            end else if (pop) begin
+                q <= mem[ptr - 1];
+                ptr <= ptr - 1;
+            end else begin
+                q <= 0;
+                ptr <= ptr;
+            end
         end
     end
 
     assign full  = (ptr == (1 << WIDTH) - 1);
     assign empty = (ptr == 0);
 
+endmodule
+
+module ram #(
+    parameter WIDTH = 32,
+    parameter DEPTH = 1024
+) (
+    input clk,
+    input wen,
+    input [WIDTH - 1:0] w_addr,
+    input [WIDTH - 1:0] r_addr,
+    input [WIDTH - 1:0] data_in,
+    output reg [WIDTH - 1:0] data_out
+);
+    reg [WIDTH - 1:0] mem [0: DEPTH - 1];
+
+    always @(posedge clk) begin
+        if (wen) begin
+            mem[w_addr] <= data_in;
+        end
+        data_out <= mem[r_addr];
+    end
 endmodule

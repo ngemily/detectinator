@@ -21,6 +21,8 @@ module connected_components_labeling(
     input [`WORD_SIZE - 1:0] C,
     input [`WORD_SIZE - 1:0] D,
     input [`WORD_SIZE - 1:0] data,
+    input [31:0] x,
+    input [31:0] y,
     output [`WORD_SIZE - 1:0] q
 );
     reg [`WORD_SIZE - 1:0] num_labels;
@@ -34,10 +36,15 @@ module connected_components_labeling(
     wire copy_d;
     wire merge;
 
-    wire push;
-    wire pop;
-    wire full;
-    wire empty;
+    wire push_0;
+    wire pop_0;
+    wire full_0;
+    wire empty_0;
+
+    wire push_1;
+    wire pop_1;
+    wire full_1;
+    wire empty_1;
 
     wire [`WORD_SIZE - 1:0] _A;
     wire [`WORD_SIZE - 1:0] _B;
@@ -47,7 +54,8 @@ module connected_components_labeling(
     wire [`WORD_SIZE - 1:0] min_label;
 
     wire [`WORD_SIZE * 2 - 1:0] stack_entry;
-    wire [`WORD_SIZE * 2 - 1:0] stack_top;
+    wire [`WORD_SIZE * 2 - 1:0] stack0_top;
+    wire [`WORD_SIZE * 2 - 1:0] stack1_top;
 
     stack #(
         .WIDTH(`WORD_SIZE * 2),
@@ -57,11 +65,26 @@ module connected_components_labeling(
         .clk(clk),
         .reset(~reset_n),
         .d(stack_entry),
-        .q(stack_top),
-        .push(push),
-        .pop(pop),
-        .empty(empty),
-        .full(full)
+        .q(stack0_top),
+        .push(push_0),
+        .pop(pop_0),
+        .empty(empty_0),
+        .full(full_0)
+    );
+
+    stack #(
+        .WIDTH(`WORD_SIZE * 2),
+        .DEPTH(`MAX)
+    )
+    U1 (
+        .clk(clk),
+        .reset(~reset_n),
+        .d(stack_entry),
+        .q(stack1_top),
+        .push(push_1),
+        .pop(pop_1),
+        .empty(empty_1),
+        .full(full_1)
     );
 
     always @(posedge clk) begin
@@ -69,13 +92,20 @@ module connected_components_labeling(
             num_labels <= 1;        // 0 is reserved
             merge_table[0] <= 255;  // merge_table[0] should NEVER be looked up
         end else if (en) begin
+            // Label count
             if (is_new_label) begin
                 num_labels <= num_labels + 1;
-                merge_table[num_labels] <= num_labels;
-            end else if (merge) begin
-                // TODO push entries onto merge stack.  For now, chain merge entries.
+            end else begin
                 num_labels <= num_labels;
-                merge_table[max_label] <= merge_table[min_label];
+            end
+
+            // Merge table
+            if (is_new_label) begin
+                merge_table[num_labels] <= num_labels;
+            end else if (pop_0) begin
+                merge_table[stack0_top[15:8]] = merge_table[stack0_top[7:0]];
+            end else if (pop_1) begin
+                merge_table[stack1_top[15:8]] = merge_table[stack1_top[7:1]];
             end
         end
     end
@@ -111,10 +141,14 @@ module connected_components_labeling(
 
     // Assumption: Only two distinct non-zero labels.
     assign stack_entry = {max_label, min_label};
-    assign push = merge;
 
-    // always @(posedge clk) begin
-    // end
+    // Push on a merge.
+    assign push_0 = merge && ~y[0];
+    assign push_1 = merge &&  y[0];
+
+    // Pop while not empty.
+    assign pop_0 =  y[0] && ~empty_0;
+    assign pop_1 = ~y[0] && ~empty_1;
 
     // assign label
     assign q = (is_background) ? 0 :
@@ -124,4 +158,5 @@ module connected_components_labeling(
         (copy_c)                      ? merge_table[C] :
         (copy_d)                      ? merge_table[D] :
                                  merge_table[min_label] ;
+
 endmodule

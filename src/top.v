@@ -125,6 +125,8 @@ module top (
         .B(buf4[`FRAME_WIDTH - 2]),
         .C(buf4[`FRAME_WIDTH - 3]),
         .D(buf3[`FRAME_WIDTH - 1]),
+        .x(x),
+        .y(y),
         .data(threshold_out),
         .q(cc_out)
     );
