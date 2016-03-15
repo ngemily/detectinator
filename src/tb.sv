@@ -96,15 +96,15 @@ module tb();
         #30_000
         // Error checking
         $monitor("ERROR: %d ns min and max label match on a merge %b",
-            $time, dut.U2.merge && (dut.U2.min_label == dut.U2.max_label));
+            $time, dut.U2.is_merge && (dut.U2.min_label == dut.U2.max_label));
         $monitor("ERROR: %d ns A neither min nor max on a merge %b",
-            $time, dut.U2.merge && (dut.U2.A && dut.U2.A != dut.U2.min_label && dut.U2.A != dut.U2.max_label));
+            $time, dut.U2.is_merge && (dut.U2.A && dut.U2.A != dut.U2.min_label && dut.U2.A != dut.U2.max_label));
         $monitor("ERROR: %d ns B neither min nor max on a merge %b",
-            $time, dut.U2.merge && (dut.U2.B && dut.U2.B != dut.U2.min_label && dut.U2.B != dut.U2.max_label));
+            $time, dut.U2.is_merge && (dut.U2.B && dut.U2.B != dut.U2.min_label && dut.U2.B != dut.U2.max_label));
         $monitor("ERROR: %d ns C neither min nor max on a merge %b",
-            $time, dut.U2.merge && (dut.U2.C && dut.U2.C != dut.U2.min_label && dut.U2.C != dut.U2.max_label));
+            $time, dut.U2.is_merge && (dut.U2.C && dut.U2.C != dut.U2.min_label && dut.U2.C != dut.U2.max_label));
         $monitor("ERROR: %d ns D neither min nor max on a merge %b",
-            $time, dut.U2.merge && (dut.U2.D && dut.U2.D != dut.U2.min_label && dut.U2.D != dut.U2.max_label));
+            $time, dut.U2.is_merge && (dut.U2.D && dut.U2.D != dut.U2.min_label && dut.U2.D != dut.U2.max_label));
         $monitor("ERROR: %d ns stack0 pushing and popping at the same time! %b",
             $time, dut.U2.U0.push && dut.U2.U0.pop);
         $monitor("ERROR: %d ns stack1 pushing and popping at the same time! %b",
@@ -160,7 +160,8 @@ module tb();
         end
 
         /***** Output verification *****/
-        out = color_table[dut.U2.merge_table[label[7:0]]];      // cc output
+        out = color_table[label[7:0]];      // cc output
+        //out = color_table[dut.U2.merge_table[label[7:0]]];      // cc output
         //out = { 3{label[15:8]} };         // threshold output
         //out = { 3{label[23:16]} };        // sobel output
 

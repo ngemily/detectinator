@@ -28,14 +28,14 @@ module connected_components_labeling(
     reg [`WORD_SIZE - 1:0] num_labels;
     reg [`WORD_SIZE - 1:0] merge_table [0 : `MAX];
 
-    wire is_background;
+    // Label selection signals
     wire is_new_label;
-    wire copy_a;
-    wire copy_b;
-    wire copy_c;
-    wire copy_d;
-    wire merge;
+    wire is_merge;
+    wire [`WORD_SIZE - 1:0] min_label;
+    wire [`WORD_SIZE - 1:0] max_label;
+    wire [`WORD_SIZE - 1:0] label;
 
+    // Merge stack signals
     wire push_0;
     wire pop_0;
     wire full_0;
@@ -46,16 +46,23 @@ module connected_components_labeling(
     wire full_1;
     wire empty_1;
 
-    wire [`WORD_SIZE - 1:0] _A;
-    wire [`WORD_SIZE - 1:0] _B;
-    wire [`WORD_SIZE - 1:0] _C;
-    wire [`WORD_SIZE - 1:0] _D;
-    wire [`WORD_SIZE - 1:0] max_label;
-    wire [`WORD_SIZE - 1:0] min_label;
-
     wire [`WORD_SIZE * 2 - 1:0] stack_entry;
     wire [`WORD_SIZE * 2 - 1:0] stack0_top;
     wire [`WORD_SIZE * 2 - 1:0] stack1_top;
+
+    label_selector U2(
+        .A(A),
+        .B(B),
+        .C(C),
+        .D(D),
+        .data(data),
+        .num_labels(num_labels),
+        .is_new_label(is_new_label),
+        .is_merge(is_merge),
+        .label(label),
+        .min_label(min_label),
+        .max_label(max_label)
+    );
 
     stack #(
         .WIDTH(`WORD_SIZE * 2),
@@ -107,8 +114,48 @@ module connected_components_labeling(
             end else if (pop_1) begin
                 merge_table[stack1_top[15:8]] = merge_table[stack1_top[7:1]];
             end
+
         end
     end
+
+    // Assumption: Only two distinct non-zero labels.
+    assign stack_entry = {max_label, min_label};
+
+    // Push on a merge.
+    assign push_0 = is_merge && ~y[0];
+    assign push_1 = is_merge &&  y[0];
+
+    // Pop while not empty.
+    assign pop_0 =  y[0] && ~empty_0;
+    assign pop_1 = ~y[0] && ~empty_1;
+
+    assign q = label;
+
+endmodule
+
+module label_selector(
+    input [`WORD_SIZE - 1:0] A,
+    input [`WORD_SIZE - 1:0] B,
+    input [`WORD_SIZE - 1:0] C,
+    input [`WORD_SIZE - 1:0] D,
+    input [`WORD_SIZE - 1:0] data,
+    input [`WORD_SIZE - 1:0] num_labels,
+    output is_new_label,
+    output is_merge,
+    output [`WORD_SIZE - 1:0] label,
+    output [`WORD_SIZE - 1:0] min_label,
+    output [`WORD_SIZE - 1:0] max_label
+);
+    wire [`WORD_SIZE - 1:0] _A;
+    wire [`WORD_SIZE - 1:0] _B;
+    wire [`WORD_SIZE - 1:0] _C;
+    wire [`WORD_SIZE - 1:0] _D;
+
+    wire is_background;
+    wire copy_a;
+    wire copy_b;
+    wire copy_c;
+    wire copy_d;
 
     assign is_background = !data;
     assign is_new_label = !(A | B | C | D) && !is_background;
@@ -128,7 +175,7 @@ module connected_components_labeling(
         && (D == B || !B)
         && (D == C || !C)
         && (D == A || !A);
-    assign merge = !(is_background | is_new_label | copy_a | copy_b | copy_c | copy_d);
+    assign is_merge = !(is_background | is_new_label | copy_a | copy_b | copy_c | copy_d);
 
     // Don't want to count 0 in min label.
     assign _A = (A == 0) ? `MAX : A;
@@ -139,24 +186,11 @@ module connected_components_labeling(
     min4 M0(_A, _B, _C, _D, min_label);
     max4 M1(A, B, C, D, max_label);
 
-    // Assumption: Only two distinct non-zero labels.
-    assign stack_entry = {max_label, min_label};
-
-    // Push on a merge.
-    assign push_0 = merge && ~y[0];
-    assign push_1 = merge &&  y[0];
-
-    // Pop while not empty.
-    assign pop_0 =  y[0] && ~empty_0;
-    assign pop_1 = ~y[0] && ~empty_1;
-
-    // assign label
-    assign q = (is_background) ? 0 :
-        (is_new_label) ? num_labels :
-        (copy_a)                      ? merge_table[A] :
-        (copy_b)                      ? merge_table[B] :
-        (copy_c)                      ? merge_table[C] :
-        (copy_d)                      ? merge_table[D] :
-                                 merge_table[min_label] ;
-
+    assign label = (is_background) ?          0 :
+                    (is_new_label) ? num_labels :
+                          (copy_a) ?          A :
+                          (copy_b) ?          B :
+                          (copy_c) ?          C :
+                          (copy_d) ?          D :
+                                      min_label ;
 endmodule
