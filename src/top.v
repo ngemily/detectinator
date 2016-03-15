@@ -109,10 +109,7 @@ module top (
     );
 
     // Threshold Sobel output to get a binary image.
-    threshold #(
-        .WIDTH(`WORD_SIZE)
-    )
-    U3 (
+    threshold U3 (
         .d(sobel_window_out),
         .q(threshold_out)
     );
@@ -136,7 +133,7 @@ endmodule
 * Perform binary threshold, like a step function u(t).
 */
 module threshold #(
-    parameter WIDTH = 1,
+    parameter WIDTH = `WORD_SIZE,
     parameter THRESHOLD = `THRESHOLD,
     parameter HI = `MAX,
     parameter LO = `MIN
