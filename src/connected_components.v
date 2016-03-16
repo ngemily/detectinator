@@ -66,7 +66,7 @@ module connected_components_labeling(
 
     stack #(
         .WIDTH(`WORD_SIZE * 2),
-        .DEPTH(`MAX)
+        .DEPTH(`WORD_SIZE)
     )
     U0 (
         .clk(clk),
@@ -81,7 +81,7 @@ module connected_components_labeling(
 
     stack #(
         .WIDTH(`WORD_SIZE * 2),
-        .DEPTH(`MAX)
+        .DEPTH(`WORD_SIZE)
     )
     U1 (
         .clk(clk),

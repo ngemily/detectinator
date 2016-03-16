@@ -10,7 +10,7 @@ module stack (
 );
 
     parameter WIDTH = 32;
-    parameter DEPTH = 8;
+    parameter DEPTH = 8;        // ADDR_WIDTH
 
     input                    clk;
     input                    reset;
@@ -22,7 +22,7 @@ module stack (
     output                   full;
 
     reg [DEPTH - 1:0] ptr;
-    reg [WIDTH - 1:0] mem [0:DEPTH - 1];
+    reg [WIDTH - 1:0] mem [0:(1<<DEPTH)-1];
 
     always @(posedge clk) begin
         if (reset) begin
