@@ -160,8 +160,9 @@ module tb();
         end
 
         /***** Output verification *****/
-        out = color_table[label[7:0]];      // cc output
-        //out = color_table[dut.U2.merge_table[label[7:0]]];      // cc output
+        // lookup final label in merge table
+        out = color_table[dut.U2.MERGE_TABLE.mem[label[7:0]]];
+        //out = color_table[label[7:0]];    // cc output
         //out = { 3{label[15:8]} };         // threshold output
         //out = { 3{label[23:16]} };        // sobel output
 

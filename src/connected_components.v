@@ -23,10 +23,11 @@ module connected_components_labeling(
     input [`WORD_SIZE - 1:0] data,
     input [31:0] x,
     input [31:0] y,
-    output [`WORD_SIZE - 1:0] q
+    output reg [`WORD_SIZE - 1:0] q
 );
+
+    // Internal registers
     reg [`WORD_SIZE - 1:0] num_labels;
-    reg [`WORD_SIZE - 1:0] merge_table [0 : `MAX];
 
     // Label selection signals
     wire is_new_label;
@@ -94,10 +95,37 @@ module connected_components_labeling(
         .full(full_1)
     );
 
+    // merge table signals
+    wire [`WORD_SIZE - 1:0] write_addr;
+    wire [`WORD_SIZE - 1:0] data_in;
+    wire [`WORD_SIZE - 1:0] data_out;
+
+    assign wen = is_new_label || pop_0 || pop_1;
+    assign write_addr = (is_new_label) ? num_labels :
+                            (pop_0) ? stack0_top[15:8] :
+                            (pop_1) ? stack1_top[15:8] :
+                                                    8'b0;
+    assign data_in = (is_new_label) ? num_labels :
+                            (pop_0) ? stack0_top[7:0] :
+                            (pop_1) ? stack1_top[7:0] :
+                                                8'b0;
+
+    ram #(
+        .WIDTH(`WORD_SIZE),
+        .DEPTH(`MAX)
+    )
+    MERGE_TABLE (
+        .clk(clk),
+        .wen(wen),
+        .w_addr(write_addr),
+        .r_addr(label),
+        .data_in(data_in),
+        .data_out(data_out)
+    );
+
     always @(posedge clk) begin
         if (~reset_n) begin
             num_labels <= 1;        // 0 is reserved
-            merge_table[0] <= 255;  // merge_table[0] should NEVER be looked up
         end else if (en) begin
             // Label count
             if (is_new_label) begin
@@ -106,15 +134,7 @@ module connected_components_labeling(
                 num_labels <= num_labels;
             end
 
-            // Merge table
-            if (is_new_label) begin
-                merge_table[num_labels] <= num_labels;
-            end else if (pop_0) begin
-                merge_table[stack0_top[15:8]] = merge_table[stack0_top[7:0]];
-            end else if (pop_1) begin
-                merge_table[stack1_top[15:8]] = merge_table[stack1_top[7:1]];
-            end
-
+            q <= label;
         end
     end
 
@@ -128,8 +148,6 @@ module connected_components_labeling(
     // Pop while not empty.
     assign pop_0 =  y[0] && ~empty_0;
     assign pop_1 = ~y[0] && ~empty_1;
-
-    assign q = label;
 
 endmodule
 
