@@ -1,64 +1,66 @@
-module stack (
-    clk,
-    reset,
-    q,
-    d,
-    push,
-    pop,
-    empty,
-    full
+module stack #(
+    parameter ADDR_WIDTH = 8,
+    parameter DATA_WIDTH = 32
+) (
+    input clk,
+    input reset_n,
+    input push,
+    input pop,
+    input      [DATA_WIDTH - 1:0] data_in,
+    output     [DATA_WIDTH - 1:0] data_out,
+    output full,
+    output empty
 );
+    localparam DEPTH = (1 << ADDR_WIDTH);
 
-    parameter WIDTH = 32;
-    parameter DEPTH = 8;        // ADDR_WIDTH
+    reg [ADDR_WIDTH - 1:0] ptr;
+    wire [ADDR_WIDTH - 1:0] r_addr = ptr - 1;
+    wire [ADDR_WIDTH - 1:0] w_addr = ptr;
 
-    input                    clk;
-    input                    reset;
-    input      [WIDTH - 1:0] d;
-    output reg [WIDTH - 1:0] q;
-    input                    push;
-    input                    pop;
-    output                   empty;
-    output                   full;
-
-    reg [DEPTH - 1:0] ptr;
-    reg [WIDTH - 1:0] mem [0:(1<<DEPTH)-1];
+    ram #(
+        .ADDR_WIDTH(ADDR_WIDTH),
+        .DATA_WIDTH(DATA_WIDTH)
+    )
+    U0 (
+        .clk(clk),
+        .wen(push),
+        .w_addr(w_addr),
+        .r_addr(r_addr),
+        .data_in(data_in),
+        .data_out(data_out)
+    );
 
     always @(posedge clk) begin
-        if (reset) begin
+        if (~reset_n) begin
             ptr <= 0;
         end else begin
             if (push) begin
-                mem[ptr] <= d;
                 ptr <= ptr + 1;
-                q <= 0;
             end else if (pop) begin
-                q <= mem[ptr - 1];
                 ptr <= ptr - 1;
-            end else begin
-                q <= 0;
-                ptr <= ptr;
             end
         end
     end
 
-    assign full  = (ptr == (1 << WIDTH) - 1);
+    assign full  = (ptr == DEPTH - 1);
     assign empty = (ptr == 0);
 
 endmodule
 
 module ram #(
-    parameter WIDTH = 32,
-    parameter DEPTH = 1024
+    parameter ADDR_WIDTH = 8,
+    parameter DATA_WIDTH = 32
 ) (
     input clk,
     input wen,
-    input [WIDTH - 1:0] w_addr,
-    input [WIDTH - 1:0] r_addr,
-    input [WIDTH - 1:0] data_in,
-    output reg [WIDTH - 1:0] data_out
+    input      [ADDR_WIDTH - 1:0] w_addr,
+    input      [ADDR_WIDTH - 1:0] r_addr,
+    input      [DATA_WIDTH - 1:0] data_in,
+    output reg [DATA_WIDTH - 1:0] data_out
 );
-    reg [WIDTH - 1:0] mem [0: DEPTH - 1];
+    localparam DEPTH = (1 << ADDR_WIDTH);
+
+    reg [DATA_WIDTH - 1:0] mem [0:DEPTH-1];
 
     always @(posedge clk) begin
         if (wen) begin

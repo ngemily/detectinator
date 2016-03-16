@@ -66,14 +66,14 @@ module connected_components_labeling(
     );
 
     stack #(
-        .WIDTH(`WORD_SIZE * 2),
-        .DEPTH(`WORD_SIZE)
+        .ADDR_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(`WORD_SIZE * 2)
     )
     U0 (
         .clk(clk),
-        .reset(~reset_n),
-        .d(stack_entry),
-        .q(stack0_top),
+        .reset_n(reset_n),
+        .data_in(stack_entry),
+        .data_out(stack0_top),
         .push(push_0),
         .pop(pop_0),
         .empty(empty_0),
@@ -81,14 +81,14 @@ module connected_components_labeling(
     );
 
     stack #(
-        .WIDTH(`WORD_SIZE * 2),
-        .DEPTH(`WORD_SIZE)
+        .ADDR_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(`WORD_SIZE * 2)
     )
     U1 (
         .clk(clk),
-        .reset(~reset_n),
-        .d(stack_entry),
-        .q(stack1_top),
+        .reset_n(reset_n),
+        .data_in(stack_entry),
+        .data_out(stack1_top),
         .push(push_1),
         .pop(pop_1),
         .empty(empty_1),
@@ -111,8 +111,8 @@ module connected_components_labeling(
                                                 8'b0;
 
     ram #(
-        .WIDTH(`WORD_SIZE),
-        .DEPTH(`MAX)
+        .ADDR_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(`WORD_SIZE)
     )
     MERGE_TABLE (
         .clk(clk),
