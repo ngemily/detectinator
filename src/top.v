@@ -16,12 +16,12 @@ module top (
     reg [31:0] frame;
 
     // Row buffers
-    reg [`WORD_SIZE - 1:0] buf4 [`FRAME_WIDTH - 1:`FRAME_WIDTH - 3];
-    reg [`WORD_SIZE - 1:0] buf3 [`FRAME_WIDTH - 1:`FRAME_WIDTH - 1];
+    reg [`WORD_SIZE - 1:0] buf4 [2:0];
+    reg [`WORD_SIZE - 1:0] buf3 [0:0];
 
-    reg [`WORD_SIZE - 1:0] buf2 [`FRAME_WIDTH - 1:`FRAME_WIDTH - 3];
-    reg [`WORD_SIZE - 1:0] buf1 [`FRAME_WIDTH - 1:`FRAME_WIDTH - 3];
-    reg [`WORD_SIZE - 1:0] buf0 [`FRAME_WIDTH - 1: `FRAME_WIDTH - 3];
+    reg [`WORD_SIZE - 1:0] buf2 [2:0];
+    reg [`WORD_SIZE - 1:0] buf1 [2:0];
+    reg [`WORD_SIZE - 1:0] buf0 [2:0];
 
     /*  Internal signals */
     wire [`WORD_SIZE - 1:0] R = data[7:0];
@@ -83,7 +83,7 @@ module top (
         .reset_n(reset_n),
         .enqueue(enqueue_1),
         .dequeue(dequeue_1),
-        .data_in(buf0[`FRAME_WIDTH - 1]),
+        .data_in(buf0[2]),
         .data_out(queue1_out),
         .empty(empty_1),
         .full(full_1)
@@ -99,7 +99,7 @@ module top (
         .reset_n(reset_n),
         .enqueue(enqueue_2),
         .dequeue(dequeue_2),
-        .data_in(buf1[`FRAME_WIDTH - 1]),
+        .data_in(buf1[2]),
         .data_out(queue2_out),
         .empty(empty_2),
         .full(full_2)
@@ -115,37 +115,38 @@ module top (
         .reset_n(reset_n),
         .enqueue(enqueue_4),
         .dequeue(dequeue_4),
-        .data_in(buf3[`FRAME_WIDTH - 1]),
+        .data_in(buf3[0]),
         .data_out(queue4_out),
         .empty(empty_4),
         .full(full_4)
     );
 
+    // Set up row buffers:
+    //  <--- SRs --->  <-------- FIFO -------->
+    //  +--+ +--+ +--+ +----------------------+
+    //  |  |-|  |-|  |-|                      |
+    //  +--+ +--+ +--+ +----------------------+
     always @(posedge clk) begin
         if (en) begin
             // Connected Components
+            buf4[2] <= buf4[1];
+            buf4[1] <= buf4[0];
+            buf4[0] <= queue4_out;
 
-            buf4[`FRAME_WIDTH - 1] <= buf4[`FRAME_WIDTH - 2];
-            buf4[`FRAME_WIDTH - 2] <= buf4[`FRAME_WIDTH - 3];
-            buf4[`FRAME_WIDTH - 3] <= queue4_out;
-
-            buf3[`FRAME_WIDTH - 1] <= cc_out;
-
+            buf3[0] <= cc_out;
 
             // Sobel
+            buf2[2] <= buf2[1];
+            buf2[1] <= buf2[0];
+            buf2[0] <= queue2_out;
 
-            buf2[`FRAME_WIDTH - 1] <= buf2[`FRAME_WIDTH - 2];
-            buf2[`FRAME_WIDTH - 2] <= buf2[`FRAME_WIDTH - 3];
-            buf2[`FRAME_WIDTH - 3] <= queue2_out;
+            buf1[2] <= buf1[1];
+            buf1[1] <= buf1[0];
+            buf1[0] <= queue1_out;
 
-            buf1[`FRAME_WIDTH - 1] <= buf1[`FRAME_WIDTH - 2];
-            buf1[`FRAME_WIDTH - 2] <= buf1[`FRAME_WIDTH - 3];
-            buf1[`FRAME_WIDTH - 3] <= queue1_out;
-
-            buf0[`FRAME_WIDTH - 1] <= buf0[`FRAME_WIDTH - 2];
-            buf0[`FRAME_WIDTH - 2] <= buf0[`FRAME_WIDTH - 3];
-            buf0[`FRAME_WIDTH - 3] <= I;
-
+            buf0[2] <= buf0[1];
+            buf0[1] <= buf0[0];
+            buf0[0] <= I;
         end
     end
 
@@ -163,15 +164,15 @@ module top (
     // ***----------        <buf1>
     // ***                  <buf0>
     sobel_window U0 (
-        .p1(buf2[`FRAME_WIDTH - 1]),
-        .p2(buf2[`FRAME_WIDTH - 2]),
-        .p3(buf2[`FRAME_WIDTH - 3]),
-        .p4(buf1[`FRAME_WIDTH - 1]),
-        .p5(buf1[`FRAME_WIDTH - 2]),
-        .p6(buf1[`FRAME_WIDTH - 3]),
-        .p7(buf0[`FRAME_WIDTH - 1]),
-        .p8(buf0[`FRAME_WIDTH - 2]),
-        .p9(buf0[`FRAME_WIDTH - 3]),
+        .p1(buf2[2]),
+        .p2(buf2[1]),
+        .p3(buf2[0]),
+        .p4(buf1[2]),
+        .p5(buf1[1]),
+        .p6(buf1[0]),
+        .p7(buf0[2]),
+        .p8(buf0[1]),
+        .p9(buf0[0]),
         .q(sobel_window_out)
     );
 
@@ -186,10 +187,10 @@ module top (
         .clk(clk),
         .reset_n(reset_n),
         .en(en),
-        .A(buf4[`FRAME_WIDTH - 1]),
-        .B(buf4[`FRAME_WIDTH - 2]),
-        .C(buf4[`FRAME_WIDTH - 3]),
-        .D(buf3[`FRAME_WIDTH - 1]),
+        .A(buf4[2]),
+        .B(buf4[1]),
+        .C(buf4[0]),
+        .D(buf3[0]),
         .x(x),
         .y(y),
         .data(threshold_out),
