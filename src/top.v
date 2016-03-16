@@ -108,7 +108,7 @@ module top (
     queue #(
         .ADDR_WIDTH(10),
         .DATA_WIDTH(`WORD_SIZE),
-        .MAX_DEPTH(`FRAME_WIDTH - 3)
+        .MAX_DEPTH(`FRAME_WIDTH - 4)
     )
     Q4 (
         .clk(clk),
