@@ -1,3 +1,60 @@
+module queue #(
+    parameter ADDR_WIDTH = 8,
+    parameter DATA_WIDTH = 32,
+    parameter MAX_DEPTH = (1 << ADDR_WIDTH)
+) (
+    input clk,
+    input reset_n,
+    input enqueue,
+    input dequeue,
+    input  [DATA_WIDTH - 1:0] data_in,
+    output [DATA_WIDTH - 1:0] data_out,
+    output empty,
+    output full
+);
+    localparam DEPTH = (1 << ADDR_WIDTH);
+
+    reg [ADDR_WIDTH - 1:0] head_ptr;
+    reg [ADDR_WIDTH - 1:0] tail_ptr;
+    reg [ADDR_WIDTH:0] size;
+
+    ram #(
+        .ADDR_WIDTH(ADDR_WIDTH),
+        .DATA_WIDTH(DATA_WIDTH)
+    )
+    U0 (
+        .clk(clk),
+        .wen(enqueue),
+        .w_addr(head_ptr),
+        .r_addr(tail_ptr),
+        .data_in(data_in),
+        .data_out(data_out)
+    );
+
+    always @(posedge clk) begin
+        if (~reset_n) begin
+            head_ptr <= 0;
+            tail_ptr <= 0;
+            size <= 0;
+        end else begin
+            if (enqueue) begin
+                head_ptr <= (head_ptr + 1) % DEPTH;
+            end
+            if (dequeue) begin
+                tail_ptr <= (tail_ptr + 1) % DEPTH;
+            end
+
+            if (enqueue ^ dequeue) begin
+                size <= (enqueue) ? size + 1 : size - 1;
+            end
+        end
+    end
+
+    assign full  = (size == MAX_DEPTH);
+    assign empty = (head_ptr == tail_ptr);
+
+endmodule
+
 module stack #(
     parameter ADDR_WIDTH = 8,
     parameter DATA_WIDTH = 32
