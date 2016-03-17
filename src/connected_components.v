@@ -23,7 +23,7 @@ module connected_components_labeling(
     input [`WORD_SIZE - 1:0] data,
     input [31:0] x,
     input [31:0] y,
-    output reg [`WORD_SIZE - 1:0] q
+    output [`WORD_SIZE - 1:0] q
 );
 
     // Internal registers
@@ -35,6 +35,7 @@ module connected_components_labeling(
     wire [`WORD_SIZE - 1:0] min_label;
     wire [`WORD_SIZE - 1:0] max_label;
     wire [`WORD_SIZE - 1:0] label;
+    reg [`WORD_SIZE - 1:0] reg_label;
 
     // Merge stack signals
     wire push_0;
@@ -112,6 +113,8 @@ module connected_components_labeling(
                        (~stack_sel) ? stack1_top[7:0] :
                                                  8'b0 ;
 
+    reg data_valid;
+
     ram #(
         .ADDR_WIDTH(`WORD_SIZE),
         .DATA_WIDTH(`WORD_SIZE)
@@ -129,6 +132,16 @@ module connected_components_labeling(
         if (~reset_n) begin
             num_labels <= 1;        // 0 is reserved
         end else if (en) begin
+            // Data valid
+            //  Cheat (a little).  We know which values we have populated into
+            //  the merge table, and we know what address we're reading this
+            //  cycle, so we can predict data valid rather than set it properly.
+            if (is_new_label || !label) begin
+                data_valid <= 0;
+            end else begin
+                data_valid <= 1;
+            end
+
             // Label count
             if (is_new_label) begin
                 num_labels <= num_labels + 1;
@@ -143,7 +156,9 @@ module connected_components_labeling(
                 write_merge <= 0;
             end
 
-            q <= label;
+            // Register current label, to match the delay from reading from the
+            // merge table.
+            reg_label <= label;
         end
     end
 
@@ -160,6 +175,8 @@ module connected_components_labeling(
     assign pop_0 =  stack_sel && ~empty_0;
     assign pop_1 = ~stack_sel && ~empty_1;
 
+    // Output either merge table output
+    assign q = (data_valid) ? data_out : reg_label;
 endmodule
 
 module label_selector(
