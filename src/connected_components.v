@@ -96,11 +96,21 @@ module connected_components_labeling(
     );
 
     // merge table signals
-    reg wen;
-    reg [`WORD_SIZE - 1:0] write_addr;
-    reg [`WORD_SIZE - 1:0] data_in;
-
+    reg write_merge;
+    wire stack_sel;
+    wire [`WORD_SIZE - 1:0] write_addr;
+    wire [`WORD_SIZE - 1:0] data_in;
     wire [`WORD_SIZE - 1:0] data_out;
+
+    assign write_addr = (is_new_label) ?       num_labels :
+                           (stack_sel) ? stack0_top[15:8] :
+                          (~stack_sel) ? stack1_top[15:8] :
+                                                     8'b0 ;
+
+    assign data_in = (is_new_label) ?      num_labels :
+                        (stack_sel) ? stack0_top[7:0] :
+                       (~stack_sel) ? stack1_top[7:0] :
+                                                 8'b0 ;
 
     ram #(
         .ADDR_WIDTH(`WORD_SIZE),
@@ -108,7 +118,7 @@ module connected_components_labeling(
     )
     MERGE_TABLE (
         .clk(clk),
-        .wen(wen),
+        .wen(write_merge || is_new_label),
         .w_addr(write_addr),
         .r_addr(label),
         .data_in(data_in),
@@ -126,23 +136,11 @@ module connected_components_labeling(
                 num_labels <= num_labels;
             end
 
-            // Merge table
-            // Register the write signals to merge table RAM because popping of
-            // stack takes one cycle.
-            if (is_new_label || pop_0 || pop_1) begin
-                wen <= 1;
+            // Register write enable on pop, since pop takes one cycle.
+            if (pop_0 || pop_1) begin
+                write_merge <= 1;
             end else begin
-                wen <= 0;
-            end
-            if (is_new_label) begin
-                write_addr <= num_labels;
-                data_in    <= num_labels;
-            end else if (pop_0) begin
-                write_addr <= stack0_top[15:8];
-                data_in    <= stack0_top[7:0];
-            end else if (pop_1) begin
-                write_addr <= stack1_top[15:8];
-                data_in    <= stack1_top[7:0];
+                write_merge <= 0;
             end
 
             q <= label;
@@ -152,13 +150,15 @@ module connected_components_labeling(
     // Assumption: Only two distinct non-zero labels.
     assign stack_entry = {max_label, min_label};
 
+    assign stack_sel = y[0];
+
     // Push on a merge.
-    assign push_0 = is_merge && ~y[0];
-    assign push_1 = is_merge &&  y[0];
+    assign push_0 = is_merge && ~stack_sel;
+    assign push_1 = is_merge &&  stack_sel;
 
     // Pop while not empty.
-    assign pop_0 =  y[0] && ~empty_0;
-    assign pop_1 = ~y[0] && ~empty_1;
+    assign pop_0 =  stack_sel && ~empty_0;
+    assign pop_1 = ~stack_sel && ~empty_1;
 
 endmodule
 
