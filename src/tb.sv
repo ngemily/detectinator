@@ -33,6 +33,7 @@ module tb();
     reg vsync;
 
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
+    reg [`WORD_SIZE - 1:0] mem2[0:`MEM_SIZE];
     reg [`PIXEL_SIZE - 1:0] color_table[0:`C_TABLE_SIZE];
 
     // Instantiate the Unit Under Test (DUT)
@@ -91,9 +92,12 @@ module tb();
         $readmemh(`CFILE, color_table);
 
         #30_000
-        // Error checking
+        /*** Error checking ***/
+        // Merge with itself.
         $monitor("ERROR: %d ns min and max label match on a merge %b",
             $time, dut.U2.is_merge && (dut.U2.min_label == dut.U2.max_label));
+
+        // 3-way merge
         $monitor("ERROR: %d ns A neither min nor max on a merge %b",
             $time, dut.U2.is_merge && (dut.U2.A && dut.U2.A != dut.U2.min_label && dut.U2.A != dut.U2.max_label));
         $monitor("ERROR: %d ns B neither min nor max on a merge %b",
@@ -102,16 +106,16 @@ module tb();
             $time, dut.U2.is_merge && (dut.U2.C && dut.U2.C != dut.U2.min_label && dut.U2.C != dut.U2.max_label));
         $monitor("ERROR: %d ns D neither min nor max on a merge %b",
             $time, dut.U2.is_merge && (dut.U2.D && dut.U2.D != dut.U2.min_label && dut.U2.D != dut.U2.max_label));
-        /*
+
+        // Merge stack
         $monitor("ERROR: %d ns stack0 pushing and popping at the same time! %b",
-            $time, dut.U2.U0.push && dut.U2.U0.pop);
+            $time, dut.U2.U1.U0.push && dut.U2.U1.U0.pop);
         $monitor("ERROR: %d ns stack1 pushing and popping at the same time! %b",
-            $time, dut.U2.U1.push && dut.U2.U1.pop);
+            $time, dut.U2.U1.U1.push && dut.U2.U1.U1.pop);
         $monitor("ERROR: %d ns popping from stack0 and stack1 at the same time! %b",
-            $time, dut.U2.U0.pop && dut.U2.U1.pop);
+            $time, dut.U2.U1.U0.pop && dut.U2.U1.U1.pop);
         $monitor("ERROR: %d ns pushing to stack0 and stack1 at the same time! %b",
-            $time, dut.U2.U0.push && dut.U2.U1.push);
-        */
+            $time, dut.U2.U1.U0.push && dut.U2.U1.U1.push);
 
     end
 
@@ -123,12 +127,20 @@ module tb();
 
         // Write bitmap
         write_bmp_head(ifh, ofh);
+
+        color_labels(
+            .bytes_per_row(width * bytes_per_pixel),
+            .rows(height),
+            .labels(mem),
+            .colors(mem2)
+        );
+
         write_mem(
             .ofh(ofh),
             .bytes_per_row(width * bytes_per_pixel),
             .rows(height),
             .padding(padding),
-            .mem(mem)
+            .mem(mem2)
         );
 
         // Close files
@@ -159,9 +171,8 @@ module tb();
         end
 
         /***** Output verification *****/
-        // lookup final label in merge table
-        out = color_table[dut.U2.MERGE_TABLE.mem[label[7:0]]];
-        //out = color_table[label[7:0]];    // cc output
+        //out = color_table[label[7:0]];    // color label
+        out = { 3{label[7:0]} };            // label
         //out = { 3{label[15:8]} };         // threshold output
         //out = { 3{label[23:16]} };        // sobel output
 

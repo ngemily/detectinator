@@ -172,3 +172,33 @@ task write_mem(
     end
 
 endtask
+
+/*
+* Do a second pass to show final label in output.
+*/
+task color_labels(
+    input integer bytes_per_row,
+    input integer rows,
+    input reg [`WORD_SIZE - 1:0] labels[0:`MEM_SIZE],
+    output reg [`WORD_SIZE - 1:0] colors[0:`MEM_SIZE]
+);
+    integer i, j, idx;
+    integer label, resolved_label, color;
+    integer p0, p1, p2;
+
+    for (i = 0; i < rows; i++) begin
+        for (j = 0; j < bytes_per_row; j += 3) begin
+            idx            = i * bytes_per_row + j;
+            label          = labels[idx];
+            resolved_label = tb.dut.U2.MERGE_TABLE.mem[label[7:0]];
+            color          = tb.color_table[resolved_label[7:0]];
+
+            //$display("%h %h %h", label, resolved_label, color);
+
+            colors[idx + 0] = color[23:16];
+            colors[idx + 1] = color[15:8];
+            colors[idx + 2] = color[7:0];
+        end
+    end
+
+endtask
