@@ -96,19 +96,11 @@ module connected_components_labeling(
     );
 
     // merge table signals
-    wire [`WORD_SIZE - 1:0] write_addr;
-    wire [`WORD_SIZE - 1:0] data_in;
-    wire [`WORD_SIZE - 1:0] data_out;
+    reg wen;
+    reg [`WORD_SIZE - 1:0] write_addr;
+    reg [`WORD_SIZE - 1:0] data_in;
 
-    assign wen = is_new_label || pop_0 || pop_1;
-    assign write_addr = (is_new_label) ? num_labels :
-                            (pop_0) ? stack0_top[15:8] :
-                            (pop_1) ? stack1_top[15:8] :
-                                                    8'b0;
-    assign data_in = (is_new_label) ? num_labels :
-                            (pop_0) ? stack0_top[7:0] :
-                            (pop_1) ? stack1_top[7:0] :
-                                                8'b0;
+    wire [`WORD_SIZE - 1:0] data_out;
 
     ram #(
         .ADDR_WIDTH(`WORD_SIZE),
@@ -132,6 +124,25 @@ module connected_components_labeling(
                 num_labels <= num_labels + 1;
             end else begin
                 num_labels <= num_labels;
+            end
+
+            // Merge table
+            // Register the write signals to merge table RAM because popping of
+            // stack takes one cycle.
+            if (is_new_label || pop_0 || pop_1) begin
+                wen <= 1;
+            end else begin
+                wen <= 0;
+            end
+            if (is_new_label) begin
+                write_addr <= num_labels;
+                data_in    <= num_labels;
+            end else if (pop_0) begin
+                write_addr <= stack0_top[15:8];
+                data_in    <= stack0_top[7:0];
+            end else if (pop_1) begin
+                write_addr <= stack1_top[15:8];
+                data_in    <= stack1_top[7:0];
             end
 
             q <= label;
