@@ -17,7 +17,6 @@ module top (
 
     // Row buffers
     reg [`WORD_SIZE - 1:0] buf4 [2:0];
-    reg [`WORD_SIZE - 1:0] buf3 [0:0];
 
     reg [`WORD_SIZE - 1:0] buf2 [2:0];
     reg [`WORD_SIZE - 1:0] buf1 [2:0];
@@ -108,14 +107,14 @@ module top (
     queue #(
         .ADDR_WIDTH(10),
         .DATA_WIDTH(`WORD_SIZE),
-        .MAX_DEPTH(`FRAME_WIDTH - 4)
+        .MAX_DEPTH(`FRAME_WIDTH - 3)
     )
     Q4 (
         .clk(clk),
         .reset_n(reset_n),
         .enqueue(enqueue_4),
         .dequeue(dequeue_4),
-        .data_in(buf3[0]),
+        .data_in(cc_out),
         .data_out(queue4_out),
         .empty(empty_4),
         .full(full_4)
@@ -132,8 +131,6 @@ module top (
             buf4[2] <= buf4[1];
             buf4[1] <= buf4[0];
             buf4[0] <= queue4_out;
-
-            buf3[0] <= cc_out;
 
             // Sobel
             buf2[2] <= buf2[1];
@@ -190,7 +187,7 @@ module top (
         .A(buf4[2]),
         .B(buf4[1]),
         .C(buf4[0]),
-        .D(buf3[0]),
+        .D(cc_out),
         .x(x),
         .y(y),
         .data(threshold_out),
