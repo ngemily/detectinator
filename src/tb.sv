@@ -90,9 +90,6 @@ module tb();
         // Read externally generated color table.
         $readmemh(`CFILE, color_table);
 
-        $monitor("INFO: %x", dut.U2.stack0_top);
-        $monitor("INFO: %x", dut.U2.stack1_top);
-
         #30_000
         // Error checking
         $monitor("ERROR: %d ns min and max label match on a merge %b",
@@ -105,6 +102,7 @@ module tb();
             $time, dut.U2.is_merge && (dut.U2.C && dut.U2.C != dut.U2.min_label && dut.U2.C != dut.U2.max_label));
         $monitor("ERROR: %d ns D neither min nor max on a merge %b",
             $time, dut.U2.is_merge && (dut.U2.D && dut.U2.D != dut.U2.min_label && dut.U2.D != dut.U2.max_label));
+        /*
         $monitor("ERROR: %d ns stack0 pushing and popping at the same time! %b",
             $time, dut.U2.U0.push && dut.U2.U0.pop);
         $monitor("ERROR: %d ns stack1 pushing and popping at the same time! %b",
@@ -113,6 +111,7 @@ module tb();
             $time, dut.U2.U0.pop && dut.U2.U1.pop);
         $monitor("ERROR: %d ns pushing to stack0 and stack1 at the same time! %b",
             $time, dut.U2.U0.push && dut.U2.U1.push);
+        */
 
     end
 

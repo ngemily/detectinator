@@ -37,21 +37,6 @@ module connected_components_labeling(
     wire [`WORD_SIZE - 1:0] label;
     reg [`WORD_SIZE - 1:0] reg_label;
 
-    // Merge stack signals
-    wire push_0;
-    wire pop_0;
-    wire full_0;
-    wire empty_0;
-
-    wire push_1;
-    wire pop_1;
-    wire full_1;
-    wire empty_1;
-
-    wire [`WORD_SIZE * 2 - 1:0] stack_entry;
-    wire [`WORD_SIZE * 2 - 1:0] stack0_top;
-    wire [`WORD_SIZE * 2 - 1:0] stack1_top;
-
     label_selector U2(
         .A(A),
         .B(B),
@@ -66,54 +51,35 @@ module connected_components_labeling(
         .max_label(max_label)
     );
 
-    stack #(
-        .ADDR_WIDTH(`WORD_SIZE),
-        .DATA_WIDTH(`WORD_SIZE * 2)
-    )
-    U0 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .data_in(stack_entry),
-        .data_out(stack0_top),
-        .push(push_0),
-        .pop(pop_0),
-        .empty(empty_0),
-        .full(full_0)
-    );
-
-    stack #(
-        .ADDR_WIDTH(`WORD_SIZE),
-        .DATA_WIDTH(`WORD_SIZE * 2)
-    )
-    U1 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .data_in(stack_entry),
-        .data_out(stack1_top),
-        .push(push_1),
-        .pop(pop_1),
-        .empty(empty_1),
-        .full(full_1)
-    );
-
-    // merge table signals
-    reg write_merge;
+    // Stack manager
+    wire pop;
     wire stack_sel;
+    wire [`WORD_SIZE * 2 - 1:0] stack_top;
+    wire [`WORD_SIZE * 2 - 1:0] stack_entry;    // Assume max one merge per neighbourhood.
+
+    assign stack_entry = {max_label, min_label};
+    assign stack_sel   = y[0];
+
+    merge_ctrl U1 (
+        .clk(clk),
+        .reset_n(reset_n),
+        .push(is_merge),
+        .stack_sel(stack_sel),
+        .stack_entry(stack_entry),
+        .pop(pop),
+        .stack_top(stack_top)
+    );
+
+    // Merge table
+    reg write_merge;
+    reg data_valid;
+
     wire [`WORD_SIZE - 1:0] write_addr;
     wire [`WORD_SIZE - 1:0] data_in;
     wire [`WORD_SIZE - 1:0] data_out;
 
-    assign write_addr = (is_new_label) ?       num_labels :
-                           (stack_sel) ? stack0_top[15:8] :
-                          (~stack_sel) ? stack1_top[15:8] :
-                                                     8'b0 ;
-
-    assign data_in = (is_new_label) ?      num_labels :
-                        (stack_sel) ? stack0_top[7:0] :
-                       (~stack_sel) ? stack1_top[7:0] :
-                                                 8'b0 ;
-
-    reg data_valid;
+    assign write_addr = (is_new_label) ? num_labels : stack_top[15:8];
+    assign data_in    = (is_new_label) ? num_labels :  stack_top[7:0];
 
     ram #(
         .ADDR_WIDTH(`WORD_SIZE),
@@ -150,7 +116,7 @@ module connected_components_labeling(
             end
 
             // Register write enable on pop, since pop takes one cycle.
-            if (pop_0 || pop_1) begin
+            if (pop) begin
                 write_merge <= 1;
             end else begin
                 write_merge <= 0;
@@ -162,21 +128,77 @@ module connected_components_labeling(
         end
     end
 
-    // Assumption: Only two distinct non-zero labels.
-    assign stack_entry = {max_label, min_label};
+    // Output either merge table output
+    assign q = (data_valid) ? data_out : reg_label;
 
-    assign stack_sel = y[0];
+endmodule
+
+/*
+* Manage two alternating stacks.  Always pushing to one and popping from the
+* other.
+*/
+module merge_ctrl(
+    input clk,
+    input reset_n,
+    input push,
+    input stack_sel,
+    input [`WORD_SIZE * 2 - 1:0] stack_entry,
+    output pop,
+    output [`WORD_SIZE * 2 - 1:0] stack_top
+);
+    wire push_0;
+    wire pop_0;
+    wire full_0;
+    wire empty_0;
+
+    wire push_1;
+    wire pop_1;
+    wire full_1;
+    wire empty_1;
+
+    wire [`WORD_SIZE * 2 - 1:0] stack0_top;
+    wire [`WORD_SIZE * 2 - 1:0] stack1_top;
+
+    stack #(
+        .ADDR_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(`WORD_SIZE * 2)
+    )
+    U0 (
+        .clk(clk),
+        .reset_n(reset_n),
+        .data_in(stack_entry),
+        .data_out(stack0_top),
+        .push(push_0),
+        .pop(pop_0),
+        .empty(empty_0),
+        .full(full_0)
+    );
+
+    stack #(
+        .ADDR_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(`WORD_SIZE * 2)
+    )
+    U1 (
+        .clk(clk),
+        .reset_n(reset_n),
+        .data_in(stack_entry),
+        .data_out(stack1_top),
+        .push(push_1),
+        .pop(pop_1),
+        .empty(empty_1),
+        .full(full_1)
+    );
 
     // Push on a merge.
-    assign push_0 = is_merge && ~stack_sel;
-    assign push_1 = is_merge &&  stack_sel;
+    assign push_0 = push && ~stack_sel;
+    assign push_1 = push &&  stack_sel;
 
     // Pop while not empty.
     assign pop_0 =  stack_sel && ~empty_0;
     assign pop_1 = ~stack_sel && ~empty_1;
+    assign pop   =  pop_0 || pop_1;
 
-    // Output either merge table output
-    assign q = (data_valid) ? data_out : reg_label;
+    assign stack_top = (stack_sel) ? stack0_top : stack1_top;
 endmodule
 
 module label_selector(
