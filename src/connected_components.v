@@ -263,7 +263,7 @@ module label_selector(
     wire copy_d;
 
     assign is_background = !p;
-    assign is_new_label = !(A | B | C | D) && !is_background;
+    assign is_new_label = ~(A || B || C || D) & ~is_background;
     assign copy_a = A
         && (A == B || !B)
         && (A == C || !C)
@@ -280,7 +280,7 @@ module label_selector(
         && (D == B || !B)
         && (D == C || !C)
         && (D == A || !A);
-    assign is_merge = !(is_background | is_new_label | copy_a | copy_b | copy_c | copy_d);
+    assign is_merge = ~(is_background | is_new_label | copy_a | copy_b | copy_c | copy_d);
 
     // Don't want to count 0 in min label.
     assign _A = (A == 0) ? `MAX : A;
