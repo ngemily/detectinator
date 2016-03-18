@@ -20,7 +20,7 @@ module connected_components_labeling(
     input [`WORD_SIZE - 1:0] B,
     input [`WORD_SIZE - 1:0] C,
     input [`WORD_SIZE - 1:0] D,
-    input [`WORD_SIZE - 1:0] data,
+    input [`WORD_SIZE - 1:0] p,
     input [31:0] x,
     input [31:0] y,
     output [`WORD_SIZE - 1:0] q
@@ -42,7 +42,7 @@ module connected_components_labeling(
         .B(B),
         .C(C),
         .D(D),
-        .data(data),
+        .p(p),
         .num_labels(num_labels),
         .is_new_label(is_new_label),
         .is_merge(is_merge),
@@ -124,7 +124,7 @@ module connected_components_labeling(
 
         buf0[2] <= buf0[1];
         buf0[1] <= buf0[0];
-        buf0[0] <= data;
+        buf0[0] <= p;
 
         valid[2] <= valid[1];
         valid[1] <= valid[0];
@@ -243,7 +243,7 @@ module label_selector(
     input [`WORD_SIZE - 1:0] B,
     input [`WORD_SIZE - 1:0] C,
     input [`WORD_SIZE - 1:0] D,
-    input [`WORD_SIZE - 1:0] data,
+    input [`WORD_SIZE - 1:0] p,
     input [`WORD_SIZE - 1:0] num_labels,
     output is_new_label,
     output is_merge,
@@ -262,7 +262,7 @@ module label_selector(
     wire copy_c;
     wire copy_d;
 
-    assign is_background = !data;
+    assign is_background = !p;
     assign is_new_label = !(A | B | C | D) && !is_background;
     assign copy_a = A
         && (A == B || !B)

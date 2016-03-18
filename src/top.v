@@ -180,7 +180,7 @@ module top (
         .D(cc_out),
         .x(x),
         .y(y),
-        .data(threshold_out),
+        .p(threshold_out),
         .q(cc_out)
     );
 
