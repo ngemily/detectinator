@@ -74,12 +74,12 @@ module connected_components_labeling(
     reg write_merge;
     reg data_valid;
 
-    wire [`WORD_SIZE - 1:0] write_addr;
-    wire [`WORD_SIZE - 1:0] data_in;
-    wire [`WORD_SIZE - 1:0] data_out;
+    wire [`WORD_SIZE - 1:0] index;
+    wire [`WORD_SIZE - 1:0] target;
+    wire [`WORD_SIZE - 1:0] resolved_label;
 
-    assign write_addr = (is_new_label) ? num_labels : stack_top[15:8];
-    assign data_in    = (is_new_label) ? num_labels :  stack_top[7:0];
+    assign index  = (is_new_label) ? num_labels : stack_top[15:8];
+    assign target = (is_new_label) ? num_labels :  stack_top[7:0];
 
     ram #(
         .ADDR_WIDTH(`WORD_SIZE),
@@ -88,11 +88,48 @@ module connected_components_labeling(
     MERGE_TABLE (
         .clk(clk),
         .wen(write_merge || is_new_label),
-        .w_addr(write_addr),
+        .w_addr(index),
         .r_addr(label),
+        .data_in(target),
+        .data_out(resolved_label)
+    );
+
+
+    // Data table
+    wire [`WORD_SIZE - 1:0] r_addr;
+    reg  [`WORD_SIZE - 1:0] w_addr;
+    reg  valid [2:0];
+    reg  [23:0] buf0 [2:0];
+    wire [23:0] data_in;
+    wire [23:0] data_out;
+
+    assign r_addr = q;
+    assign data_in = (valid[2]) ? data_out + buf0[2] : buf0[2];
+
+    ram #(
+        .ADDR_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(24)
+    )
+    DATA_TABLE (
+        .clk(clk),
+        .wen(1'b1),
+        .w_addr(w_addr),
+        .r_addr(r_addr),
         .data_in(data_in),
         .data_out(data_out)
     );
+
+    always @(posedge clk) begin
+        w_addr <= r_addr;
+
+        buf0[2] <= buf0[1];
+        buf0[1] <= buf0[0];
+        buf0[0] <= data;
+
+        valid[2] <= valid[1];
+        valid[1] <= valid[0];
+        valid[0] <= r_addr < num_labels - 1;
+    end
 
     always @(posedge clk) begin
         if (~reset_n) begin
@@ -129,7 +166,7 @@ module connected_components_labeling(
     end
 
     // Output either merge table output
-    assign q = (data_valid) ? data_out : reg_label;
+    assign q = (data_valid) ? resolved_label : reg_label;
 
 endmodule
 
