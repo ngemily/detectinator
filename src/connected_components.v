@@ -153,11 +153,7 @@ module connected_components_labeling(
             end
 
             // Register write enable on pop, since pop takes one cycle.
-            if (pop) begin
-                write_merge <= 1;
-            end else begin
-                write_merge <= 0;
-            end
+            write_merge <= pop;
 
             // Register current label, to match the delay from reading from the
             // merge table.
