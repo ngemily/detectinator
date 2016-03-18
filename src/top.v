@@ -10,11 +10,6 @@ module top (
     output [`PIXEL_SIZE - 1:0] out
 );
     /*  Internal registers */
-    // Location of current pixel
-    reg [31:0] x;
-    reg [31:0] y;
-    reg [31:0] frame;
-
     // Row buffers
     reg [`WORD_SIZE - 1:0] buf4 [2:0];
 
@@ -23,6 +18,11 @@ module top (
     reg [`WORD_SIZE - 1:0] buf0 [2:0];
 
     /*  Internal signals */
+    // Location of current pixel
+    wire [31:0] x;
+    wire [31:0] y;
+    wire [31:0] frame;
+
     wire [`WORD_SIZE - 1:0] R = data[7:0];
     wire [`WORD_SIZE - 1:0] G = data[15:8];
     wire [`WORD_SIZE - 1:0] B = data[23:16];
@@ -34,28 +34,6 @@ module top (
     wire [`WORD_SIZE - 1:0] cc_out;
 
     integer i;
-
-    // Update location using HSYNC and VSYNC
-    always @(posedge clk) begin
-        if (~reset_n) begin
-            x <= 0;
-            y <= 0;
-            frame <= 0;
-        end else if (en) begin
-            if (hsync) begin
-                // new row
-                x <= 0;
-                y <= y + 1;
-            end else if (vsync) begin
-                // new frame
-                x <= 0;
-                y <= 0;
-                frame <= frame + 1;
-            end else begin
-                x <= x + 1;
-            end
-        end
-    end
 
     wire empty_1, full_1;
     wire empty_2, full_2;
@@ -146,6 +124,18 @@ module top (
             buf0[0] <= I;
         end
     end
+
+    // Generate x, y co-ords
+    location_generator U4(
+        .clk(clk),
+        .reset_n(reset_n),
+        .en(en),
+        .hsync(hsync),
+        .vsync(vsync),
+        .x(x),
+        .y(y),
+        .frame(frame)
+    );
 
     // 24-bit RGB intput to 8-bit Intensity (grayscale)
     rgb2i U1(
