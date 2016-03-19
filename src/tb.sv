@@ -6,7 +6,7 @@
 `timescale 1ns/100ps
 
 module tb();
-    integer ifh, ofh;
+    integer ifh, ofh, dfh;
 
     // Inputs
     reg clk;
@@ -134,6 +134,13 @@ module tb();
             .labels(mem),
             .colors(mem2)
         );
+
+        dfh = open_file("out/data_table.txt", "w");
+        output_data (
+            .ofh(dfh),
+            .mem(dut.U2.DATA_TABLE.mem)
+        );
+        $fclose(dfh);
 
         write_mem(
             .ofh(ofh),

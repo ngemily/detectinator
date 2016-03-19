@@ -202,3 +202,34 @@ task color_labels(
     end
 
 endtask
+
+task output_data (
+    input integer ofh,
+    input reg [383:0] mem[0:255]
+);
+    parameter WIDTH = 384;//`WORD_SIZE;
+    parameter DEPTH = 20; //`MEM_SIZE;
+
+    localparam NUM_OBJS  = 3;
+    localparam OBJ_WIDTH = 128;
+    localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
+
+    integer i;
+    longint unsigned p_acc;
+    longint unsigned x_acc;
+    longint unsigned y_acc;
+
+    $fwrite(ofh, "%8s %16s %16s %16s %8s %8s\n",
+        "label", "area", "xacc", "yacc", "xbar", "ybar");
+
+    for (i = 0; i < DEPTH; i++) begin
+        p_acc = mem[i][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        x_acc = mem[i][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        y_acc = mem[i][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+
+        if (p_acc) begin
+            $fwrite(ofh, "%h %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_acc / p_acc, y_acc / p_acc);
+        end
+    end
+
+endtask
