@@ -96,19 +96,39 @@ module connected_components_labeling(
 
 
     // Data table
+    localparam NUM_OBJS  = 3;
+    localparam OBJ_WIDTH = 128;
+    localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
+
     wire [`WORD_SIZE - 1:0] r_addr;
     reg  [`WORD_SIZE - 1:0] w_addr;
+
     reg  valid [2:0];
-    reg  [23:0] buf0 [2:0];
-    wire [23:0] data_in;
-    wire [23:0] data_out;
+    reg  [D_WIDTH - 1:0] buf0 [2:0];
+    wire [D_WIDTH - 1:0] data_in;
+    wire [D_WIDTH - 1:0] data_out;
+
+    // Feed into SR
+    wire [OBJ_WIDTH - 1:0] p_in = p;
+    wire [OBJ_WIDTH - 1:0] xp   = x * p;
+    wire [OBJ_WIDTH - 1:0] yp   = y * p;
+
+    // Coming out of SR
+    wire [OBJ_WIDTH - 1:0] p_acc = data_out[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + buf0[2][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] x_acc = data_out[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + buf0[2][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] y_acc = data_out[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + buf0[2][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+
+    // Data layout
+    //  0 15:0  - 00
+    //  1 31:16 - 01
+    //  2 47:32 - 10
 
     assign r_addr = q;
-    assign data_in = (valid[2]) ? data_out + buf0[2] : buf0[2];
+    assign data_in = (valid[2]) ? {y_acc, x_acc, p_acc} : buf0[2] ;
 
     ram #(
         .ADDR_WIDTH(`WORD_SIZE),
-        .DATA_WIDTH(24)
+        .DATA_WIDTH(D_WIDTH)
     )
     DATA_TABLE (
         .clk(clk),
@@ -124,7 +144,7 @@ module connected_components_labeling(
 
         buf0[2] <= buf0[1];
         buf0[1] <= buf0[0];
-        buf0[0] <= p;
+        buf0[0] <= {xp, yp, p_in};
 
         valid[2] <= valid[1];
         valid[1] <= valid[0];
