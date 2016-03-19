@@ -15,7 +15,7 @@
 `define OFILE "out/out.bmp"
 `define CFILE "src/colors.txt"
 
-`define FRAME_WIDTH 550     //0x226
+`define FRAME_WIDTH 1280     //0x226
 `define FRAME_HEIGHT 1
 
 `define THRESHOLD 50
