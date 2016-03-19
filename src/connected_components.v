@@ -147,8 +147,7 @@ module connected_components_labeling(
         p_reg[0] <= {xp, yp, p_in};
 
         data_valid[2] <= data_valid[1];
-        data_valid[1] <= data_valid[0];
-        data_valid[0] <= r_addr < num_labels - 1;
+        data_valid[1] <= resolved_label_valid;
     end
 
     always @(posedge clk) begin

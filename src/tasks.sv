@@ -202,7 +202,82 @@ task color_labels(
 
 endtask
 
-task output_data (
+/**
+* Annotate output image with dots indicating centre of mass of detected objects.
+*/
+task draw_dots(
+    input integer bytes_per_row,
+    input integer rows,
+    inout reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE],
+    input reg [383:0] data_table[0:255]
+);
+    parameter WIDTH = 384;//`WORD_SIZE;
+    parameter DEPTH = 20; //`MEM_SIZE;
+
+    localparam NUM_OBJS  = 3;
+    localparam OBJ_WIDTH = 128;
+    localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
+
+    integer i, idx;
+    longint unsigned p_acc;
+    longint unsigned x_acc;
+    longint unsigned y_acc;
+    longint unsigned x_bar;
+    longint unsigned y_bar;
+
+    for (i = 0; i < DEPTH; i++) begin
+        p_acc = data_table[i][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        x_acc = data_table[i][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        y_acc = data_table[i][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        x_bar = x_acc / p_acc;
+        y_bar = y_acc / p_acc;
+
+        if (p_acc) begin
+            $display("%d %d", x_bar, y_bar);
+            draw_circle(
+                .bytes_per_row(bytes_per_row),
+                .x(x_bar),
+                .y(y_bar),
+                .mem(mem)
+            );
+        end
+    end
+
+endtask
+
+task draw_circle(
+    input integer bytes_per_row,
+    input integer x,
+    input integer y,
+    inout reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
+);
+    integer idx;
+
+    idx = y * bytes_per_row + x * 3;
+    mem[idx - 2] = 255;
+    mem[idx - 1] = 255;
+    mem[idx] = 255;
+    mem[idx + 1] = 255;
+    mem[idx + 2] = 255;
+
+    idx = (y + 1) * bytes_per_row + x * 3;
+    mem[idx - 1] = 255;
+    mem[idx] = 255;
+    mem[idx + 1] = 255;
+
+    idx = (y - 1) * bytes_per_row + x * 3;
+    mem[idx - 1] = 255;
+    mem[idx] = 255;
+    mem[idx + 1] = 255;
+
+    idx = (y + 2) * bytes_per_row + x * 3;
+    mem[idx] = 255;
+
+    idx = (y - 2) * bytes_per_row + x * 3;
+    mem[idx] = 255;
+endtask
+
+task dump_data (
     input integer ofh,
     input reg [383:0] mem[0:255]
 );
@@ -217,6 +292,8 @@ task output_data (
     longint unsigned p_acc;
     longint unsigned x_acc;
     longint unsigned y_acc;
+    longint unsigned x_bar;
+    longint unsigned y_bar;
 
     $fwrite(ofh, "%8s %16s %16s %16s %8s %8s\n",
         "label", "area", "xacc", "yacc", "xbar", "ybar");
@@ -225,9 +302,11 @@ task output_data (
         p_acc = mem[i][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
         x_acc = mem[i][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
         y_acc = mem[i][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        x_bar = x_acc / p_acc;
+        y_bar = y_acc / p_acc;
 
         if (p_acc) begin
-            $fwrite(ofh, "%8d %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_acc / p_acc, y_acc / p_acc);
+            $fwrite(ofh, "%8d %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_bar, y_bar);
         end
     end
 
