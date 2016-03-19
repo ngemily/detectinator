@@ -228,7 +228,7 @@ task output_data (
         y_acc = mem[i][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
 
         if (p_acc) begin
-            $fwrite(ofh, "%h %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_acc / p_acc, y_acc / p_acc);
+            $fwrite(ofh, "%8d %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_acc / p_acc, y_acc / p_acc);
         end
     end
 
