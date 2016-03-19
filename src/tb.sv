@@ -33,7 +33,6 @@ module tb();
     reg vsync;
 
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
-    reg [`WORD_SIZE - 1:0] mem2[0:`MEM_SIZE];
     reg [`PIXEL_SIZE - 1:0] color_table[0:`C_TABLE_SIZE];
 
     // Instantiate the Unit Under Test (DUT)
@@ -131,8 +130,7 @@ module tb();
         color_labels(
             .bytes_per_row(width * bytes_per_pixel),
             .rows(height),
-            .labels(mem),
-            .colors(mem2)
+            .mem(mem)
         );
 
         dfh = open_file("out/data_table.txt", "w");
@@ -147,7 +145,7 @@ module tb();
             .bytes_per_row(width * bytes_per_pixel),
             .rows(height),
             .padding(padding),
-            .mem(mem2)
+            .mem(mem)
         );
 
         // Close files

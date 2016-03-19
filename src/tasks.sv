@@ -179,8 +179,7 @@ endtask
 task color_labels(
     input integer bytes_per_row,
     input integer rows,
-    input reg [`WORD_SIZE - 1:0] labels[0:`MEM_SIZE],
-    output reg [`WORD_SIZE - 1:0] colors[0:`MEM_SIZE]
+    inout reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE]
 );
     integer i, j, idx;
     integer label, resolved_label, color;
@@ -189,15 +188,15 @@ task color_labels(
     for (i = 0; i < rows; i++) begin
         for (j = 0; j < bytes_per_row; j += 3) begin
             idx            = i * bytes_per_row + j;
-            label          = labels[idx];
+            label          = mem[idx];
             resolved_label = tb.dut.U2.MERGE_TABLE.mem[label[7:0]];
             color          = tb.color_table[resolved_label[7:0]];
 
             //$display("%h %h %h", label, resolved_label, color);
 
-            colors[idx + 0] = color[23:16];
-            colors[idx + 1] = color[15:8];
-            colors[idx + 2] = color[7:0];
+            mem[idx + 0] = color[23:16];
+            mem[idx + 1] = color[15:8];
+            mem[idx + 2] = color[7:0];
         end
     end
 
