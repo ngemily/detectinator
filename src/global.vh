@@ -16,7 +16,7 @@
 `define CFILE "src/colors.txt"
 
 `define FRAME_WIDTH 550     //0x226
-`define FRAME_HEIGHT 1
+`define FRAME_HEIGHT 303    // 0x12f
 
 `define THRESHOLD 50
 

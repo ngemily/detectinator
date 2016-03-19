@@ -133,8 +133,15 @@ module tb();
             .mem(mem)
         );
 
+        draw_dots(
+            .bytes_per_row(width * bytes_per_pixel),
+            .rows(height),
+            .mem(mem),
+            .data_table(dut.U2.DATA_TABLE.mem)
+        );
+
         dfh = open_file("out/data_table.txt", "w");
-        output_data (
+        dump_data (
             .ofh(dfh),
             .mem(dut.U2.DATA_TABLE.mem)
         );
