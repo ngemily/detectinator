@@ -72,7 +72,7 @@ module connected_components_labeling(
 
     // Merge table
     reg write_merge;
-    reg data_valid;
+    reg resolved_label_valid;
 
     wire [`WORD_SIZE - 1:0] index;
     wire [`WORD_SIZE - 1:0] target;
@@ -103,8 +103,8 @@ module connected_components_labeling(
     wire [`WORD_SIZE - 1:0] r_addr;
     reg  [`WORD_SIZE - 1:0] w_addr;
 
-    reg  valid [2:0];
-    reg  [D_WIDTH - 1:0] buf0 [2:0];
+    reg  data_valid [2:0];
+    reg  [D_WIDTH - 1:0] p_reg [2:0];
     wire [D_WIDTH - 1:0] data_in;
     wire [D_WIDTH - 1:0] data_out;
 
@@ -114,9 +114,9 @@ module connected_components_labeling(
     wire [OBJ_WIDTH - 1:0] yp   = y * p;
 
     // Coming out of SR
-    wire [OBJ_WIDTH - 1:0] p_acc = data_out[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + buf0[2][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] x_acc = data_out[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + buf0[2][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] y_acc = data_out[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + buf0[2][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] p_acc = data_out[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_reg[2][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] x_acc = data_out[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_reg[2][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] y_acc = data_out[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_reg[2][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
 
     // Data layout
     //  0 15:0  - 00
@@ -124,7 +124,7 @@ module connected_components_labeling(
     //  2 47:32 - 10
 
     assign r_addr = q;
-    assign data_in = (valid[2]) ? {y_acc, x_acc, p_acc} : buf0[2] ;
+    assign data_in = (data_valid[2]) ? {y_acc, x_acc, p_acc} : p_reg[2] ;
 
     ram #(
         .ADDR_WIDTH(`WORD_SIZE),
@@ -142,13 +142,13 @@ module connected_components_labeling(
     always @(posedge clk) begin
         w_addr <= r_addr;
 
-        buf0[2] <= buf0[1];
-        buf0[1] <= buf0[0];
-        buf0[0] <= {xp, yp, p_in};
+        p_reg[2] <= p_reg[1];
+        p_reg[1] <= p_reg[0];
+        p_reg[0] <= {xp, yp, p_in};
 
-        valid[2] <= valid[1];
-        valid[1] <= valid[0];
-        valid[0] <= r_addr < num_labels - 1;
+        data_valid[2] <= data_valid[1];
+        data_valid[1] <= data_valid[0];
+        data_valid[0] <= r_addr < num_labels - 1;
     end
 
     always @(posedge clk) begin
@@ -160,9 +160,9 @@ module connected_components_labeling(
             //  the merge table, and we know what address we're reading this
             //  cycle, so we can predict data valid rather than set it properly.
             if (is_new_label || !label) begin
-                data_valid <= 0;
+                resolved_label_valid <= 0;
             end else begin
-                data_valid <= 1;
+                resolved_label_valid <= 1;
             end
 
             // Label count
@@ -182,7 +182,7 @@ module connected_components_labeling(
     end
 
     // Output either merge table output
-    assign q = (data_valid) ? resolved_label : reg_label;
+    assign q = (resolved_label_valid) ? resolved_label : reg_label;
 
 endmodule
 
