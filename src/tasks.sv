@@ -235,7 +235,7 @@ task draw_dots(
         x_bar = x_acc / p_acc;
         y_bar = y_acc / p_acc;
         x = y_bar;
-        y = `FRAME_HEIGHT - x_bar;
+        y = x_bar;
 
         if (p_acc) begin
             $display("%d %d %d %d", x_bar, y_bar, x, y);
