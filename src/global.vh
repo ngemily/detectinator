@@ -30,6 +30,6 @@
 `define CC       2
 
 // set output mode to one of the above modes 
-`define OUT SOBEL
+`define OUT `CC
 
 `endif
