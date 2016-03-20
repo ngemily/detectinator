@@ -227,6 +227,7 @@ task draw_dots(
     longint unsigned x;
     longint unsigned y;
 
+    $display("%16s %16s %16s %16s", "x_bar", "y_bar", "x", "y");
     for (i = 0; i < DEPTH; i++) begin
         p_acc = data_table[i][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
         x_acc = data_table[i][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
