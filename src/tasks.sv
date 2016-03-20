@@ -224,20 +224,25 @@ task draw_dots(
     longint unsigned y_acc;
     longint unsigned x_bar;
     longint unsigned y_bar;
+    longint unsigned x;
+    longint unsigned y;
 
+    $display("%16s %16s %16s %16s", "x_bar", "y_bar", "x", "y");
     for (i = 0; i < DEPTH; i++) begin
         p_acc = data_table[i][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
         x_acc = data_table[i][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
         y_acc = data_table[i][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
         x_bar = x_acc / p_acc;
         y_bar = y_acc / p_acc;
+        x = y_bar;
+        y = x_bar;
 
         if (p_acc) begin
-            $display("%d %d", x_bar, y_bar);
+            $display("%d %d %d %d", x_bar, y_bar, x, y);
             draw_circle(
                 .bytes_per_row(bytes_per_row),
-                .x(x_bar),
-                .y(y_bar),
+                .x(x),
+                .y(y),
                 .mem(mem)
             );
         end
