@@ -40,12 +40,12 @@ module top (
     wire empty_2, full_2;
     wire empty_4, full_4;
 
-    wire enqueue_1 = 1'b1;
-    wire dequeue_1 = full_1;
-    wire enqueue_2 = 1'b1;
-    wire dequeue_2 = full_2;
-    wire enqueue_4 = 1'b1;
-    wire dequeue_4 = full_4;
+    wire enqueue_1 = en;
+    wire dequeue_1 = en & full_1;
+    wire enqueue_2 = en;
+    wire dequeue_2 = en & full_2;
+    wire enqueue_4 = en;
+    wire dequeue_4 = en & full_4;
 
     wire [`WORD_SIZE - 1:0] queue1_out;
     wire [`WORD_SIZE - 1:0] queue2_out;

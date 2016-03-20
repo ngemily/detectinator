@@ -115,13 +115,19 @@ module tb();
         $monitor("ERROR: %d ns pushing to stack0 and stack1 at the same time! %b",
             $time, dut.U2.U1.U0.push && dut.U2.U1.U1.push);
 
+        // Test abrupt enable/disable
+        #500_000 en = 0;
+        #500_000 en = 1;
+        #500_000 en = 0;
+        #500_000 en = 1;
+
     end
 
     // ====================
     // Termination sequence
     // ====================
     initial begin
-        #3_000_000
+        #4_000_000
 
         // Write bitmap
         write_bmp_head(ifh, ofh);
@@ -183,13 +189,15 @@ module tb();
             hsync = 0;
         end
 
-        /***** Output verification *****/
-        mem[count + 0] = out[7:0];
-        mem[count + 1] = out[15:8];
-        mem[count + 2] = out[23:16];
+        if (en) begin
+            /***** Output verification *****/
+            mem[count + 0] = out[7:0];
+            mem[count + 1] = out[15:8];
+            mem[count + 2] = out[23:16];
 
-        /***** Test bench logic *****/
-        count += 3;
+            /***** Test bench logic *****/
+            count += 3;
+        end
     end
 
 endmodule
