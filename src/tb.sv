@@ -13,9 +13,7 @@ module tb();
     reg reset_n;
     reg en;
     reg [`PIXEL_SIZE - 1:0] data;
-
-    // Internal
-    wire [`PIXEL_SIZE - 1:0] label;
+    wire [`WORD_SIZE - 1:0] mode = (1 << `CC);
 
     // Outputs
     reg [`PIXEL_SIZE - 1:0] out;
@@ -42,8 +40,9 @@ module tb();
         .en(en),
         .hsync(hsync),
         .vsync(vsync),
+        .mode(mode),
         .data(data),
-        .out(label)
+        .out(out)
     );
 
     // =======================
@@ -127,25 +126,27 @@ module tb();
         // Write bitmap
         write_bmp_head(ifh, ofh);
 
-        color_labels(
-            .bytes_per_row(width * bytes_per_pixel),
-            .rows(height),
-            .mem(mem)
-        );
+        if (mode[`CC]) begin
+            color_labels(
+                .bytes_per_row(width * bytes_per_pixel),
+                .rows(height),
+                .mem(mem)
+            );
 
-        draw_dots(
-            .bytes_per_row(width * bytes_per_pixel),
-            .rows(height),
-            .mem(mem),
-            .data_table(dut.U2.DATA_TABLE.mem)
-        );
+            draw_dots(
+                .bytes_per_row(width * bytes_per_pixel),
+                .rows(height),
+                .mem(mem),
+                .data_table(dut.U2.DATA_TABLE.mem)
+            );
 
-        dfh = open_file("out/data_table.txt", "w");
-        dump_data (
-            .ofh(dfh),
-            .mem(dut.U2.DATA_TABLE.mem)
-        );
-        $fclose(dfh);
+            dfh = open_file("out/data_table.txt", "w");
+            dump_data (
+                .ofh(dfh),
+                .mem(dut.U2.DATA_TABLE.mem)
+            );
+            $fclose(dfh);
+        end
 
         write_mem(
             .ofh(ofh),
@@ -183,11 +184,6 @@ module tb();
         end
 
         /***** Output verification *****/
-        //out = color_table[label[7:0]];    // color label
-        out = { 3{label[7:0]} };            // label
-        //out = { 3{label[15:8]} };         // threshold output
-        //out = { 3{label[23:16]} };        // sobel output
-
         mem[count + 0] = out[7:0];
         mem[count + 1] = out[15:8];
         mem[count + 2] = out[23:16];
