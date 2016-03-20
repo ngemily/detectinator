@@ -7,6 +7,7 @@ module top (
     input hsync,
     input vsync,
     input [`PIXEL_SIZE - 1:0] data,
+    input [`WORD_SIZE - 1:0] mode,
     output [`PIXEL_SIZE - 1:0] out
 );
     /*  Internal registers */
@@ -184,5 +185,8 @@ module top (
         .q(cc_out)
     );
 
-    assign out = {sobel_window_out, threshold_out, cc_out};
+    assign out = (mode[`SOBEL]) ? {3{sobel_window_out}} :
+                (mode[`THRESH]) ?    {3{threshold_out}} :
+                    (mode[`CC]) ?           {3{cc_out}} :
+                                  {3{sobel_window_out}} ;
 endmodule
