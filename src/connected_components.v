@@ -25,17 +25,20 @@ module connected_components_labeling(
     input [31:0] y,
     output [`WORD_SIZE - 1:0] q
 );
-    localparam NUM_OBJS  = 3;
-    localparam OBJ_WIDTH = 128;
+    // Data table parameters
+    localparam NUM_OBJS  = 3;       // How many features are we collecting?
+    localparam OBJ_WIDTH = 128;     // Data width of each feature.
     localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
 
     // Internal registers
     reg [`WORD_SIZE - 1:0] num_labels;
-    reg [`WORD_SIZE - 1:0] label_delay;
+    reg [`WORD_SIZE - 1:0] label_delay  [1:0];
+    reg [`WORD_SIZE - 1:0] index_delay;
+    reg [`WORD_SIZE - 1:0] target_delay;
     reg [`WORD_SIZE - 1:0] q_delay;
-    reg [D_WIDTH - 1:0]    p_delay      [2:1];
-    reg                    data_valid   [2:1];
-    reg                    pop_delay;
+    reg [D_WIDTH - 1:0]    p_delay      [2:0];
+    reg                    data_valid   [2:0];
+    reg is_new_label_delay;
 
     // Label selection signals
     wire is_background;
@@ -82,7 +85,7 @@ module connected_components_labeling(
     );
 
     // Merge table
-    wire write_merge          = pop_delay;
+    wire write_merge          = pop | is_new_label_delay;
     wire resolved_label_valid = data_valid[1];
 
     wire [`WORD_SIZE - 1:0] index;
@@ -98,10 +101,10 @@ module connected_components_labeling(
     )
     MERGE_TABLE (
         .clk(clk),
-        .wen(write_merge || is_new_label),
-        .w_addr(index),
-        .r_addr(label),
-        .data_in(target),
+        .wen(write_merge),
+        .w_addr(index_delay),
+        .r_addr(label_delay[0]),
+        .data_in(target_delay),
         .data_out(resolved_label)
     );
 
@@ -154,7 +157,8 @@ module connected_components_labeling(
             //  the merge table, and we know what address we're reading this
             //  cycle, so we can predict data valid rather than set it properly.
             data_valid[2] <= data_valid[1];
-            data_valid[1] <= valid;
+            data_valid[1] <= data_valid[0];
+            data_valid[0] <= valid;
 
             // Label count
             if (is_new_label) begin
@@ -163,24 +167,28 @@ module connected_components_labeling(
                 num_labels <= num_labels;
             end
 
-            // Register write enable on pop, since pop takes one cycle.
-            pop_delay <= pop;
-
             // Register current label, to match the delay from reading from the
             // merge table.
-            label_delay <= label;
+            label_delay[1] <= label_delay[0];
+            label_delay[0] <= label;
+
+            // Register input to merge table, to match delay on r_addr
+            is_new_label_delay <= is_new_label;
+            index_delay        <= index;
+            target_delay       <= target;
 
             // Register current output, for writing data next cycle.
-            q_delay <= r_addr;
+            q_delay <= q;
 
             // Register current pixel, for writing into data tbale.
             p_delay[2] <= p_delay[1];
-            p_delay[1] <= {xp, yp, p_in};
+            p_delay[1] <= p_delay[0];
+            p_delay[0] <= {xp, yp, p_in};
         end
     end
 
     // Output either merge table output
-    assign q = (resolved_label_valid) ? resolved_label : label_delay;
+    assign q = (data_valid[1]) ? resolved_label : label_delay[1];
 
 endmodule
 
