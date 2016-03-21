@@ -53,7 +53,7 @@ module top (
     wire [`WORD_SIZE - 1:0] queue4_out;
 
     queue #(
-        .ADDR_WIDTH(10),
+        .ADDR_WIDTH(11),
         .DATA_WIDTH(`WORD_SIZE),
         .MAX_DEPTH(`FRAME_WIDTH - 3)
     )
@@ -69,7 +69,7 @@ module top (
     );
 
     queue #(
-        .ADDR_WIDTH(10),
+        .ADDR_WIDTH(11),
         .DATA_WIDTH(`WORD_SIZE),
         .MAX_DEPTH(`FRAME_WIDTH - 3)
     )
@@ -85,7 +85,7 @@ module top (
     );
 
     queue #(
-        .ADDR_WIDTH(10),
+        .ADDR_WIDTH(11),
         .DATA_WIDTH(`WORD_SIZE),
         .MAX_DEPTH(`FRAME_WIDTH - 4)
     )
