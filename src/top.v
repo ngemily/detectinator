@@ -13,6 +13,7 @@ module top (
     /*  Internal registers */
     // Row buffers
     reg [`WORD_SIZE - 1:0] buf4 [2:0];
+    reg [`WORD_SIZE - 1:0] threshold_out_delay;
 
     reg [`WORD_SIZE - 1:0] buf2 [2:0];
     reg [`WORD_SIZE - 1:0] buf1 [2:0];
@@ -123,6 +124,9 @@ module top (
             buf0[2] <= buf0[1];
             buf0[1] <= buf0[0];
             buf0[0] <= I;
+
+            // Pipeline register
+            threshold_out_delay <= threshold_out;
         end
     end
 
@@ -181,7 +185,7 @@ module top (
         .D(cc_out),
         .x(x),
         .y(y),
-        .p(threshold_out),
+        .p(threshold_out_delay),
         .q(cc_out)
     );
 
