@@ -8,6 +8,7 @@ module top (
     input vsync,
     input [`PIXEL_SIZE - 1:0] data,
     input [`WORD_SIZE - 1:0] mode,
+    input [`WORD_SIZE - 1:0] threshold,
     output [`PIXEL_SIZE - 1:0] out
 );
     /*  Internal registers */
@@ -173,6 +174,7 @@ module top (
     // Threshold Sobel output to get a binary image.
     threshold U3 (
         .d(sobel_window_out),
+        .threshold(threshold),
         .q(threshold_out)
     );
 

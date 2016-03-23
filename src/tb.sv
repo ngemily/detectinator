@@ -42,6 +42,7 @@ module tb();
         .vsync(vsync),
         .mode(mode),
         .data(data),
+        .threshold(`THRESHOLD),
         .out(out)
     );
 

@@ -5,14 +5,14 @@
 */
 module threshold #(
     parameter WIDTH = `WORD_SIZE,
-    parameter THRESHOLD = `THRESHOLD,
     parameter HI = `MAX,
     parameter LO = `MIN
 ) (
     input [WIDTH - 1:0] d,
+    input [WIDTH - 1:0] threshold,
     output [WIDTH - 1:0] q
 );
-    assign q = (d > THRESHOLD) ? HI : LO;
+    assign q = (d > threshold) ? HI : LO;
 endmodule
 
 /**

@@ -21,7 +21,7 @@
 
 /**** IP logic ****/
 // Sobel output threshold
-`define THRESHOLD 50
+`define THRESHOLD 8'd50
 
 /**** Output mode ****/
 `define PASS     0
