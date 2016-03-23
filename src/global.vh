@@ -24,13 +24,14 @@
 `define THRESHOLD 50
 
 /**** Output mode ****/
-// one-hot encoded mode
-`define SOBEL    0
-`define THRESH   1
-`define CC       2
-`define COLOR    3
+`define PASS     0
+`define GRAY     1
+`define SOBEL    2
+`define THRESH   3
+`define CC       4
+`define COLOR    5
 
 // set output mode to one of the above modes 
-`define OUT `COLOR
+`define OUT `SOBEL
 
 `endif

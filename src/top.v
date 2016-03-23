@@ -202,9 +202,11 @@ module top (
         .data_out(color_out)
     );
 
-    assign out = (mode[`SOBEL]) ? {3{sobel_window_out}} :
-                (mode[`THRESH]) ?    {3{threshold_out}} :
-                    (mode[`CC]) ?           {3{cc_out}} :
-                 (mode[`COLOR]) ?           {color_out} :
-                                  {3{sobel_window_out}} ;
+    assign out =  (mode == `PASS) ?                {data} :
+                  (mode == `GRAY) ?                {3{I}} :
+                 (mode == `SOBEL) ? {3{sobel_window_out}} :
+                (mode == `THRESH) ?    {3{threshold_out}} :
+                    (mode == `CC) ?           {3{cc_out}} :
+                 (mode == `COLOR) ?           {color_out} :
+                                    {3{sobel_window_out}} ;
 endmodule

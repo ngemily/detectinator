@@ -13,7 +13,7 @@ module tb();
     reg reset_n;
     reg en;
     reg [`PIXEL_SIZE - 1:0] data;
-    wire [`WORD_SIZE - 1:0] mode = (1 << `OUT);
+    wire [`WORD_SIZE - 1:0] mode = `OUT;
 
     // Outputs
     reg [`PIXEL_SIZE - 1:0] out;
