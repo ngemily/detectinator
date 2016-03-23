@@ -106,6 +106,32 @@ module stack #(
 
 endmodule
 
+module ram_dr_sw #(
+    parameter ADDR_WIDTH = 8,
+    parameter DATA_WIDTH = 32
+) (
+    input clk,
+    input wen,
+    input      [ADDR_WIDTH - 1:0] w_addr,
+    input      [ADDR_WIDTH - 1:0] r_addr1,
+    input      [ADDR_WIDTH - 1:0] r_addr2,
+    input      [DATA_WIDTH - 1:0] data_in,
+    output reg [DATA_WIDTH - 1:0] data_out1,
+    output reg [DATA_WIDTH - 1:0] data_out2
+);
+    localparam DEPTH = (1 << ADDR_WIDTH);
+
+    reg [DATA_WIDTH - 1:0] mem [0:DEPTH-1];
+
+    always @(posedge clk) begin
+        if (wen) begin
+            mem[w_addr] <= data_in;
+        end
+        data_out1 <= mem[r_addr1];
+        data_out2 <= mem[r_addr2];
+    end
+endmodule
+
 module ram #(
     parameter ADDR_WIDTH = 8,
     parameter DATA_WIDTH = 32

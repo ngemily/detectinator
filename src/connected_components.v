@@ -42,6 +42,7 @@ module connected_components_labeling(
     reg [D_WIDTH - 1:0]    p_delay      [2:0];
     reg                    data_valid   [2:0];
     reg is_new_label_delay;
+    reg is_merge_delay [2:0];
 
     // Label selection signals
     wire is_background;
@@ -113,11 +114,13 @@ module connected_components_labeling(
 
 
     // Data table
-    wire [`WORD_SIZE - 1:0] r_addr;
+    wire [`WORD_SIZE - 1:0] r_addr1;
+    wire [`WORD_SIZE - 1:0] r_addr2;
     wire [`WORD_SIZE - 1:0] w_addr;
 
     wire [D_WIDTH - 1:0] data_in;
-    wire [D_WIDTH - 1:0] data_out;
+    wire [D_WIDTH - 1:0] data_out1;
+    wire [D_WIDTH - 1:0] data_out2;
 
     // Feed into SR
     wire [OBJ_WIDTH - 1:0] p_in = p;
@@ -125,20 +128,27 @@ module connected_components_labeling(
     wire [OBJ_WIDTH - 1:0] yp   = y * p;
 
     // Coming out of SR
-    wire [OBJ_WIDTH - 1:0] p_acc = data_out[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] x_acc = data_out[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] y_acc = data_out[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] p_acc = data_out1[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] x_acc = data_out1[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] y_acc = data_out1[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+
+    wire [OBJ_WIDTH - 1:0] p_merge = data_out2[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + data_out1[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] x_merge = data_out2[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + data_out1[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [OBJ_WIDTH - 1:0] y_merge = data_out2[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + data_out1[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
 
     // Data layout
     //  0 15:0  - 00
     //  1 31:16 - 01
     //  2 47:32 - 10
 
-    assign r_addr  = q;
+    assign r_addr1  = q;
+    assign r_addr2  = label_delay[2];
     assign w_addr  = q_delay;
-    assign data_in = (data_valid[2]) ? {y_acc, x_acc, p_acc} : p_delay[2] ;
+    assign data_in = (is_merge_delay[2]) ? {y_merge, x_merge, p_merge} :
+                        (data_valid[2])  ? {y_acc, x_acc, p_acc} :
+                                                            p_delay[2] ;
 
-    ram #(
+    ram_dr_sw #(
         .ADDR_WIDTH(`WORD_SIZE),
         .DATA_WIDTH(D_WIDTH)
     )
@@ -146,9 +156,11 @@ module connected_components_labeling(
         .clk(clk),
         .wen(1'b1),
         .w_addr(w_addr),
-        .r_addr(r_addr),
+        .r_addr1(r_addr1),
+        .r_addr2(r_addr2),
         .data_in(data_in),
-        .data_out(data_out)
+        .data_out1(data_out1),
+        .data_out2(data_out2)
     );
 
     always @(posedge clk) begin
@@ -172,6 +184,7 @@ module connected_components_labeling(
 
             // Register current label, to match the delay from reading from the
             // merge table.
+            label_delay[2] <= label_delay[1];
             label_delay[1] <= label_delay[0];
             label_delay[0] <= label;
 
@@ -179,6 +192,10 @@ module connected_components_labeling(
             is_new_label_delay <= is_new_label;
             index_delay        <= index;
             target_delay       <= target;
+
+            is_merge_delay[2] <= is_merge_delay[1];
+            is_merge_delay[1] <= is_merge_delay[0];
+            is_merge_delay[0] <= is_merge;
 
             // Register current output, for writing data next cycle.
             q_delay <= q;
