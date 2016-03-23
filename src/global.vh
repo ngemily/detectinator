@@ -28,8 +28,9 @@
 `define SOBEL    0
 `define THRESH   1
 `define CC       2
+`define COLOR    3
 
 // set output mode to one of the above modes 
-`define OUT `SOBEL
+`define OUT `COLOR
 
 `endif

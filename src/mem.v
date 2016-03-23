@@ -1,3 +1,5 @@
+`include "global.vh"
+
 module queue #(
     parameter ADDR_WIDTH = 8,
     parameter DATA_WIDTH = 32,
@@ -123,6 +125,28 @@ module ram #(
         if (wen) begin
             mem[w_addr] <= data_in;
         end
+        data_out <= mem[r_addr];
+    end
+endmodule
+
+module rom #(
+    parameter ADDR_WIDTH = 8,
+    parameter DATA_WIDTH = 32,
+    parameter INIT_FILE = `CFILE
+) (
+    input clk,
+    input      [ADDR_WIDTH - 1:0] r_addr,
+    output reg [DATA_WIDTH - 1:0] data_out
+);
+    localparam DEPTH = (1 << ADDR_WIDTH);
+
+    reg [DATA_WIDTH - 1:0] mem [0:DEPTH-1];
+
+    initial begin
+        $readmemh(INIT_FILE, mem);
+    end
+
+    always @(posedge clk) begin
         data_out <= mem[r_addr];
     end
 endmodule
