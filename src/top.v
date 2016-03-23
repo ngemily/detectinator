@@ -4,8 +4,8 @@ module top (
     input clk,
     input reset_n,
     input en,
-    input hsync,
-    input vsync,
+    input [31:0]x,
+    input [31:0]y,
     input [`PIXEL_SIZE - 1:0] data,
     input [`WORD_SIZE - 1:0] mode,
     input [`WORD_SIZE - 1:0] threshold,
@@ -21,10 +21,12 @@ module top (
     reg [`WORD_SIZE - 1:0] buf0 [2:0];
 
     /*  Internal signals */
+    /*
     // Location of current pixel
     wire [31:0] x;
     wire [31:0] y;
     wire [31:0] frame;
+    */
 
     wire [`WORD_SIZE - 1:0] R = data[7:0];
     wire [`WORD_SIZE - 1:0] G = data[15:8];
@@ -134,6 +136,7 @@ module top (
     end
 
     // Generate x, y co-ords
+    /*
     location_generator U4(
         .clk(clk),
         .reset_n(reset_n),
@@ -144,6 +147,7 @@ module top (
         .y(y),
         .frame(frame)
     );
+    */
 
     // 24-bit RGB intput to 8-bit Intensity (grayscale)
     rgb2i U1(
