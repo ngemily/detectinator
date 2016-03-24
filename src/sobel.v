@@ -32,8 +32,8 @@ module sobel_window(
     wire [`WORD_SIZE - 1:0] abs_dx;
     wire [`WORD_SIZE - 1:0] abs_dy;
 
-    assign dx = (p1 + 2 * p4 + p7) - (p3 + 2 * p6 + p9);
-    assign dy = (p1 + 2 * p2 + p3) - (p7 + 2 * p8 + p9);
+    assign dx = (3 * p1 + 10 * p4 + 3 * p7) - (3 * p3 + 10 * p6 + 3 * p9);
+    assign dy = (3 * p1 + 10 * p2 + 3 * p3) - (3 * p7 + 10 * p8 + 3 * p9);
     assign abs_dx = (dx < 0) ? -dx : dx;
     assign abs_dy = (dy < 0) ? -dy : dy;
 
