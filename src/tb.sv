@@ -103,10 +103,11 @@ module tb();
         );
 
         // Read externally generated color table.
-        $readmemh(`CFILE, color_table);
+        $readmemh(`SIM_CFILE, color_table);
 
         #30_000
         /*** Error checking ***/
+`ifdef RTL_SIM
         // Merge with itself.
         $monitor("ERROR: %d ns min and max label match on a merge %b",
             $time, dut.U2.is_merge && (dut.U2.min_label == dut.U2.max_label));
@@ -130,6 +131,7 @@ module tb();
             $time, dut.U2.U1.U0.pop && dut.U2.U1.U1.pop);
         $monitor("ERROR: %d ns pushing to stack0 and stack1 at the same time! %b",
             $time, dut.U2.U1.U0.push && dut.U2.U1.U1.push);
+`endif
 
         // Test abrupt enable/disable
         #500_000 en = 0;
@@ -148,7 +150,8 @@ module tb();
         // Write bitmap
         write_bmp_head(ifh, ofh);
 
-        if (mode[`CC]) begin
+`ifdef RTL_SIM
+        if (mode == `CC) begin
             color_labels(
                 .bytes_per_row(width * bytes_per_pixel),
                 .rows(height),
@@ -169,6 +172,7 @@ module tb();
             );
             $fclose(dfh);
         end
+`endif
 
         write_mem(
             .ofh(ofh),

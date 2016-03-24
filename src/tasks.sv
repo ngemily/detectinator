@@ -173,6 +173,7 @@ task write_mem(
 
 endtask
 
+`ifdef RTL_SIM
 /*
 * Do a second pass to show final label in output.
 */
@@ -201,6 +202,7 @@ task color_labels(
     end
 
 endtask
+`endif
 
 /**
 * Annotate output image with dots indicating centre of mass of detected objects.

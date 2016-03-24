@@ -9,4 +9,4 @@ vlog src/sobel.v
 vlog src/util.v
 
 vlog src/top.v
-vlog src/tb.sv
+vlog +define+RTL_SIM src/tb.sv
