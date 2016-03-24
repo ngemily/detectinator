@@ -2,21 +2,22 @@
 `define _global_vh_
 
 /**** Memory setup ****/
-`define MEM_SIZE 'h10_0000
+`define MEM_SIZE     'h10_0000
 `define C_TABLE_SIZE 255
 
-`define WORD_SIZE 8
-`define MAX 255
-`define MIN 0
+`define WORD_SIZE  8
+`define MAX        255
+`define MIN        0
 `define PIXEL_SIZE 24
 
 /**** Input/output files ****/
-`define IFILE "imgs/alien.bmp"
-`define OFILE "out/out.bmp"
-`define CFILE "src/colors.txt"
+`define IFILE       "imgs/alien.bmp"
+`define OFILE       "out/out.bmp"
+`define SYNTH_CFILE "colors.txt"
+`define SIM_CFILE   "src/colors.txt"
 
 // input image size
-`define FRAME_WIDTH 1280     //0x226
+`define FRAME_WIDTH  1280
 `define FRAME_HEIGHT 1
 
 /**** IP logic ****/
@@ -32,6 +33,6 @@
 `define COLOR    5
 
 // set output mode to one of the above modes 
-`define OUT `SOBEL
+`define OUT `COLOR
 
 `endif

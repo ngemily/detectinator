@@ -132,7 +132,7 @@ endmodule
 module rom #(
     parameter ADDR_WIDTH = 8,
     parameter DATA_WIDTH = 32,
-    parameter INIT_FILE = `CFILE
+    parameter INIT_FILE = `SYNTH_CFILE
 ) (
     input clk,
     input      [ADDR_WIDTH - 1:0] r_addr,

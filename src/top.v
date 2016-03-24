@@ -180,7 +180,7 @@ module top (
     rom #(
         .ADDR_WIDTH(8),
         .DATA_WIDTH(`PIXEL_SIZE),
-        .INIT_FILE(`CFILE)
+        .INIT_FILE(`SYNTH_CFILE)
     )
     COLOR_TABLE (
         .clk(clk),
