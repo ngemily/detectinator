@@ -13,8 +13,8 @@
 /**** Input/output files ****/
 `define IFILE       "imgs/alien.bmp"
 `define OFILE       "out/out.bmp"
-`define SYNTH_CFILE "colors.txt"
-`define SIM_CFILE   "src/colors.txt"
+`define SYNTH_CFILE "colors.dat"
+`define SIM_CFILE   "src/colors.dat"
 
 // input image size
 `define FRAME_WIDTH  1280
