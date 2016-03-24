@@ -21,13 +21,7 @@ module top (
     reg [`WORD_SIZE - 1:0] buf0 [2:0];
 
     /*  Internal signals */
-    /*
-    // Location of current pixel
-    wire [31:0] x;
-    wire [31:0] y;
-    wire [31:0] frame;
-    */
-
+    // Section data into RGB channels
     wire [`WORD_SIZE - 1:0] R = data[7:0];
     wire [`WORD_SIZE - 1:0] G = data[15:8];
     wire [`WORD_SIZE - 1:0] B = data[23:16];
@@ -134,20 +128,6 @@ module top (
             threshold_out_delay <= threshold_out;
         end
     end
-
-    // Generate x, y co-ords
-    /*
-    location_generator U4(
-        .clk(clk),
-        .reset_n(reset_n),
-        .en(en),
-        .hsync(hsync),
-        .vsync(vsync),
-        .x(x),
-        .y(y),
-        .frame(frame)
-    );
-    */
 
     // 24-bit RGB intput to 8-bit Intensity (grayscale)
     rgb2i U1(

@@ -29,6 +29,9 @@ module tb();
 
     reg hsync;
     reg vsync;
+    wire [31:0] x;
+    wire [31:0] y;
+    wire [31:0] frame;
 
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
     reg [`PIXEL_SIZE - 1:0] color_table[0:`C_TABLE_SIZE];
@@ -38,12 +41,24 @@ module tb();
         .clk(clk),
         .reset_n(reset_n),
         .en(en),
-        .hsync(hsync),
-        .vsync(vsync),
+        .x(x),
+        .y(y),
         .mode(mode),
         .data(data),
         .threshold(`THRESHOLD),
         .out(out)
+    );
+
+    // Generate x, y co-ords
+    location_generator U4(
+        .clk(clk),
+        .reset_n(reset_n),
+        .en(en),
+        .hsync(hsync),
+        .vsync(vsync),
+        .x(x),
+        .y(y),
+        .frame(frame)
     );
 
     // =======================
