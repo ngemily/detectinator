@@ -23,7 +23,10 @@ module connected_components_labeling(
     input [`WORD_SIZE - 1:0] p,
     input [31:0] x,
     input [31:0] y,
-    output [`WORD_SIZE - 1:0] q
+    input [`WORD_SIZE - 1:0] obj_id,
+    output [`WORD_SIZE - 1:0] q,
+    output [31:0] obj_x,
+    output [31:0] obj_y
 );
     // Data table parameters
     localparam NUM_OBJS  = 3;       // How many features are we collecting?

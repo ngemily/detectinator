@@ -13,7 +13,10 @@ module tb();
     reg reset_n;
     reg en;
     reg [`PIXEL_SIZE - 1:0] data;
+    wire [`WORD_SIZE - 1:0] obj_id = 1;
     wire [`WORD_SIZE - 1:0] mode = `OUT;
+    wire [31:0] obj_x;
+    wire [31:0] obj_y;
 
     // Outputs
     reg [`PIXEL_SIZE - 1:0] out;
@@ -46,7 +49,10 @@ module tb();
         .mode(mode),
         .data(data),
         .threshold(`THRESHOLD),
-        .out(out)
+        .obj_id(obj_id),
+        .out(out),
+        .obj_x(obj_x),
+        .obj_y(obj_y)
     );
 
     // Generate x, y co-ords

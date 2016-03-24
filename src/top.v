@@ -9,7 +9,10 @@ module top (
     input [`PIXEL_SIZE - 1:0] data,
     input [`WORD_SIZE - 1:0] mode,
     input [`WORD_SIZE - 1:0] threshold,
-    output [`PIXEL_SIZE - 1:0] out
+    input [`WORD_SIZE - 1:0] obj_id,
+    output [`PIXEL_SIZE - 1:0] out,
+    output [31:0] obj_x,
+    output [31:0] obj_y
 );
     /*  Internal registers */
     // Row buffers
@@ -174,7 +177,10 @@ module top (
         .x(x),
         .y(y),
         .p(threshold_out_delay),
-        .q(cc_out)
+        .obj_id(obj_id),
+        .q(cc_out),
+        .obj_x(obj_x),
+        .obj_y(obj_y)
     );
 
     rom #(
@@ -195,4 +201,7 @@ module top (
                     (mode == `CC) ?           {3{cc_out}} :
                  (mode == `COLOR) ?           {color_out} :
                                     {3{sobel_window_out}} ;
+
+    assign obj_x = 1;
+    assign obj_y = 1;
 endmodule
