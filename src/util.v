@@ -25,9 +25,10 @@ module rgb2i(
     output [`WORD_SIZE - 1:0] I
 );
     // I = 0.299 * R + 0.587 * G + 0.114 * B;
-    assign I = (R >> 2) + (R >> 5)
-                + (G >> 1) + (G >> 4)
-                + (B >> 4) + (B >> 5);
+    assign I = ((R >> 2) + (R >> 5)
+              + (G >> 1) + (G >> 4)
+              + (B >> 4) + (B >> 5))
+                            & 8'hF8;
 endmodule
 
 /**
