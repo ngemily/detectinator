@@ -218,7 +218,7 @@ task draw_dots(
     input reg [383:0] data_table[0:255]
 );
     parameter WIDTH = 384;//`WORD_SIZE;
-    parameter DEPTH = 20; //`MEM_SIZE;
+    parameter DEPTH = 255; //`MEM_SIZE;
 
     localparam NUM_OBJS  = 3;
     localparam OBJ_WIDTH = 128;
