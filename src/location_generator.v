@@ -7,9 +7,9 @@ module location_generator(
     input en,
     input hsync,
     input vsync,
-    output reg [31:0] x,
-    output reg [31:0] y,
-    output reg [31:0] frame
+    output reg [15:0] x,
+    output reg [15:0] y,
+    output reg [15:0] frame
 );
     // Update location using HSYNC and VSYNC
     always @(posedge clk) begin

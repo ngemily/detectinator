@@ -4,15 +4,15 @@ module top (
     input clk,
     input reset_n,
     input en,
-    input [31:0]x,
-    input [31:0]y,
+    input [15:0]x,
+    input [15:0]y,
     input [`PIXEL_SIZE - 1:0] data,
     input [`WORD_SIZE - 1:0] mode,
     input [`WORD_SIZE - 1:0] threshold,
     input [`WORD_SIZE - 1:0] obj_id,
     output [`PIXEL_SIZE - 1:0] out,
-    output [31:0] obj_x,
-    output [31:0] obj_y
+    output [15:0] obj_x,
+    output [15:0] obj_y
 );
     /*  Internal registers */
     // Row buffers
