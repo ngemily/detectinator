@@ -193,6 +193,8 @@ module connected_components_labeling(
     // Output either merge table output
     assign q = (data_valid[1]) ? resolved_label : label_delay[1];
 
+    assign obj_x = 1;
+    assign obj_y = 1;
 endmodule
 
 /*

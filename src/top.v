@@ -201,7 +201,4 @@ module top (
                     (mode == `CC) ?           {3{cc_out}} :
                  (mode == `COLOR) ?           {color_out} :
                                     {3{sobel_window_out}} ;
-
-    assign obj_x = 1;
-    assign obj_y = 1;
 endmodule
