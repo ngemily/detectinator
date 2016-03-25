@@ -11,13 +11,13 @@
 `define PIXEL_SIZE 24
 
 /**** Input/output files ****/
-`define IFILE       "imgs/alien.bmp"
+`define IFILE       "imgs/eyes.bmp"
 `define OFILE       "out/out.bmp"
 `define SYNTH_CFILE "colors.dat"
 `define SIM_CFILE   "src/colors.dat"
 
 // input image size
-`define FRAME_WIDTH  1280
+`define FRAME_WIDTH  146
 `define FRAME_HEIGHT 1
 
 /**** IP logic ****/
@@ -33,6 +33,6 @@
 `define COLOR    5
 
 // set output mode to one of the above modes 
-`define OUT `COLOR
+`define OUT `CC
 
 `endif
