@@ -190,7 +190,11 @@ task color_labels(
         for (j = 0; j < bytes_per_row; j += 3) begin
             idx            = i * bytes_per_row + j;
             label          = mem[idx];
+`ifdef DISP_RESOLVED_LABEL
             resolved_label = tb.dut.U2.MERGE_TABLE.mem[label[7:0]];
+`else
+            resolved_label = label;
+`endif
             color          = tb.color_table[resolved_label[7:0]];
 
             //$display("%h %h %h", label, resolved_label, color);

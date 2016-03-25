@@ -20,6 +20,9 @@
 `define FRAME_WIDTH  1280
 `define FRAME_HEIGHT 1
 
+/**** Testbench setup ****/
+`define DISP_RESOLVED_LABEL
+
 /**** IP logic ****/
 // Sobel output threshold
 `define THRESHOLD 8'd50
