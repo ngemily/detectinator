@@ -9,6 +9,7 @@
 `define MAX        255
 `define MIN        0
 `define PIXEL_SIZE 24
+`define LOC_SIZE   16
 
 /**** Input/output files ****/
 `define IFILE       "imgs/alien.bmp"

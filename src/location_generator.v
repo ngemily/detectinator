@@ -1,3 +1,5 @@
+`include "global.vh"
+
 /**
 * Generate (x, y) co-ordinates from sync signals.
 */
@@ -7,9 +9,9 @@ module location_generator(
     input en,
     input hsync,
     input vsync,
-    output reg [15:0] x,
-    output reg [15:0] y,
-    output reg [15:0] frame
+    output reg [`LOC_SIZE - 1:0] x,
+    output reg [`LOC_SIZE - 1:0] y,
+    output reg [`LOC_SIZE - 1:0] frame
 );
     // Update location using HSYNC and VSYNC
     always @(posedge clk) begin

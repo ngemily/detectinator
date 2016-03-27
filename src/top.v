@@ -4,8 +4,8 @@ module top (
     input clk,
     input reset_n,
     input en,
-    input [15:0]x,
-    input [15:0]y,
+    input [`LOC_SIZE - 1:0]x,
+    input [`LOC_SIZE - 1:0]y,
     input [`PIXEL_SIZE - 1:0] data,
     input [`WORD_SIZE - 1:0] mode,
     input [`WORD_SIZE - 1:0] sobel_threshold,
@@ -13,8 +13,8 @@ module top (
     input [`WORD_SIZE - 1:0] obj_id,
     output [`WORD_SIZE - 1:0] num_labels,
     output [`PIXEL_SIZE - 1:0] out,
-    output [15:0] obj_x,
-    output [15:0] obj_y
+    output [`LOC_SIZE - 1:0] obj_x,
+    output [`LOC_SIZE - 1:0] obj_y
 );
     /*  Internal registers */
     // Row buffers

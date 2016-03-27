@@ -15,8 +15,8 @@ module tb();
     reg [`PIXEL_SIZE - 1:0] data;
     reg [`WORD_SIZE - 1:0] obj_id = 1;
     wire [`WORD_SIZE - 1:0] mode = `OUT;
-    wire [15:0] obj_x;
-    wire [15:0] obj_y;
+    wire [`LOC_SIZE - 1:0] obj_x;
+    wire [`LOC_SIZE - 1:0] obj_y;
     wire [7:0] num_labels;
 
     // Outputs
@@ -33,9 +33,9 @@ module tb();
 
     reg hsync;
     reg vsync;
-    wire [15:0] x;
-    wire [15:0] y;
-    wire [15:0] frame;
+    wire [`LOC_SIZE - 1:0] x;
+    wire [`LOC_SIZE - 1:0] y;
+    wire [`LOC_SIZE - 1:0] frame;
 
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
     reg [`PIXEL_SIZE - 1:0] color_table[0:`C_TABLE_SIZE];
