@@ -24,7 +24,7 @@ module connected_components_labeling(
     input [15:0] x,
     input [15:0] y,
     input [`WORD_SIZE - 1:0] obj_id,
-    output [`WORD_SIZE - 1:0] num_labels,
+    output reg [`WORD_SIZE - 1:0] num_labels,
     output [`WORD_SIZE - 1:0] q,
     output [15:0] obj_x,
     output [15:0] obj_y
@@ -33,9 +33,6 @@ module connected_components_labeling(
     localparam NUM_OBJS  = 3;       // How many features are we collecting?
     localparam OBJ_WIDTH = 128;     // Data width of each feature.
     localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
-
-    // Internal registers
-    reg [`WORD_SIZE - 1:0] num_labels;
 
     // Pipeline registers
     reg [`WORD_SIZE - 1:0] label_delay  [1:0];
