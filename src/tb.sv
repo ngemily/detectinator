@@ -17,6 +17,7 @@ module tb();
     wire [`WORD_SIZE - 1:0] mode = `OUT;
     wire [15:0] obj_x;
     wire [15:0] obj_y;
+    wire [7:0] num_labels;
 
     // Outputs
     reg [`PIXEL_SIZE - 1:0] out;
@@ -53,7 +54,8 @@ module tb();
         .obj_id(obj_id),
         .out(out),
         .obj_x(obj_x),
-        .obj_y(obj_y)
+        .obj_y(obj_y),
+        .num_labels(num_labels)
     );
 
     // Generate x, y co-ords
@@ -189,6 +191,7 @@ module tb();
             .mem(mem)
         );
 
+        $display("Found %d labels.", num_labels);
         for (i = 0; i < 5; i++) begin
             #50
             obj_id <= obj_id + 1;
