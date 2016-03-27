@@ -6,14 +6,14 @@
 `timescale 1ns/100ps
 
 module tb();
-    integer ifh, ofh, dfh;
+    integer i, ifh, ofh, dfh;
 
     // Inputs
     reg clk;
     reg reset_n;
     reg en;
     reg [`PIXEL_SIZE - 1:0] data;
-    wire [`WORD_SIZE - 1:0] obj_id = 1;
+    reg [`WORD_SIZE - 1:0] obj_id = 1;
     wire [`WORD_SIZE - 1:0] mode = `OUT;
     wire [15:0] obj_x;
     wire [15:0] obj_y;
@@ -188,6 +188,12 @@ module tb();
             .padding(padding),
             .mem(mem)
         );
+
+        for (i = 0; i < 5; i++) begin
+            #50
+            obj_id <= obj_id + 1;
+            $display("%d: %d %d", obj_id, obj_x, obj_y);
+        end
 
         // Close files
         $fclose(ifh);
