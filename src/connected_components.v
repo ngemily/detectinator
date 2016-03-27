@@ -35,13 +35,18 @@ module connected_components_labeling(
 
     // Internal registers
     reg [`WORD_SIZE - 1:0] num_labels;
+
+    // Pipeline registers
     reg [`WORD_SIZE - 1:0] label_delay  [1:0];
-    reg [`WORD_SIZE - 1:0] index_delay;
-    reg [`WORD_SIZE - 1:0] target_delay;
     reg [`WORD_SIZE - 1:0] q_delay;
     reg [D_WIDTH - 1:0]    p_delay      [2:0];
     reg                    data_valid   [2:0];
-    reg is_new_label_delay;
+
+    // Label selection/Merge table
+    reg [`WORD_SIZE * 2 - 1:0] stack_entry_delay;
+
+    // Merge stack/Merge table
+    reg is_merge_delay;
 
     // Label selection signals
     wire is_background;
@@ -69,7 +74,7 @@ module connected_components_labeling(
     wire valid = ~(is_new_label | is_background);    // no valid table entries
 
     // Stack manager
-    wire pop;
+    wire popped;
     wire stack_sel;
     wire [`WORD_SIZE * 2 - 1:0] stack_top;
     wire [`WORD_SIZE * 2 - 1:0] stack_entry;    // Assume max one merge per neighbourhood.
@@ -80,15 +85,15 @@ module connected_components_labeling(
     merge_ctrl U1 (
         .clk(clk),
         .reset_n(reset_n),
-        .push(is_merge),
+        .push(is_merge_delay),
         .stack_sel(stack_sel),
-        .stack_entry(stack_entry),
-        .pop(pop),
+        .stack_entry(stack_entry_delay),
+        .popped(popped),
         .stack_top(stack_top)
     );
 
     // Merge table
-    wire write_merge          = pop | is_new_label_delay;
+    wire write_merge          = popped | is_new_label;
     wire resolved_label_valid = data_valid[1];
 
     wire [`WORD_SIZE - 1:0] index;
@@ -105,9 +110,9 @@ module connected_components_labeling(
     MERGE_TABLE (
         .clk(clk),
         .wen(write_merge),
-        .w_addr(index_delay),
+        .w_addr(index),
         .r_addr(label_delay[0]),
-        .data_in(target_delay),
+        .data_in(target),
         .data_out(resolved_label)
     );
 
@@ -175,10 +180,12 @@ module connected_components_labeling(
             label_delay[1] <= label_delay[0];
             label_delay[0] <= label;
 
-            // Register input to merge table, to match delay on r_addr
-            is_new_label_delay <= is_new_label;
-            index_delay        <= index;
-            target_delay       <= target;
+            // Register input to merge stacks.
+            stack_entry_delay  <= stack_entry;
+
+            // Takes one cycle to read from merge stack, so delay writing to
+            // merge table.
+            is_merge_delay <= is_merge;
 
             // Register current output, for writing data next cycle.
             q_delay <= q;
@@ -207,7 +214,7 @@ module merge_ctrl(
     input push,
     input stack_sel,
     input [`WORD_SIZE * 2 - 1:0] stack_entry,
-    output pop,
+    output reg popped,
     output [`WORD_SIZE * 2 - 1:0] stack_top
 );
     wire push_0;
@@ -260,7 +267,10 @@ module merge_ctrl(
     // Pop while not empty.
     assign pop_0 =  stack_sel && ~empty_0;
     assign pop_1 = ~stack_sel && ~empty_1;
-    assign pop   =  pop_0 || pop_1;
+
+    always @(posedge clk) begin
+        popped <= pop_0 || pop_1;
+    end
 
     assign stack_top = (stack_sel) ? stack0_top : stack1_top;
 endmodule
