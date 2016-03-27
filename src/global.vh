@@ -24,13 +24,14 @@
 `define DISP_RESOLVED_LABEL
 
 /**** IP logic ****/
-// Sobel output threshold
-`define THRESHOLD 8'd50
+`define SOBEL_THRESHOLD 8'd50
+`define FLOOD_THRESHOLD 8'd3
 
 /**** Output mode ****/
 `define PASS     0
 `define GRAY     1
 `define SOBEL    2
+`define FLOOD    7
 `define THRESH   3
 `define CC       4
 `define COLOR    5

@@ -39,3 +39,51 @@ module sobel_window(
 
     assign q = abs_dx + abs_dy;
 endmodule
+
+module flood_window(
+    input [`WORD_SIZE - 1:0] p11,
+    input [`WORD_SIZE - 1:0] p12,
+    input [`WORD_SIZE - 1:0] p13,
+    input [`WORD_SIZE - 1:0] p14,
+    input [`WORD_SIZE - 1:0] p15,
+    input [`WORD_SIZE - 1:0] p21,
+    input [`WORD_SIZE - 1:0] p22,
+    input [`WORD_SIZE - 1:0] p23,
+    input [`WORD_SIZE - 1:0] p24,
+    input [`WORD_SIZE - 1:0] p25,
+    input [`WORD_SIZE - 1:0] p31,
+    input [`WORD_SIZE - 1:0] p32,
+    input [`WORD_SIZE - 1:0] p33,
+    input [`WORD_SIZE - 1:0] p34,
+    input [`WORD_SIZE - 1:0] p35,
+    input [`WORD_SIZE - 1:0] threshold,
+    output [`WORD_SIZE - 1:0] q
+);
+    wire [`WORD_SIZE - 1:0] sum;
+
+    wire b11, b12, b13, b14, b15;
+    wire b21, b22, b23, b24, b25;
+    wire b31, b32, b33, b34, b35;
+
+    assign b11 = p11 ? 1 : 0;
+    assign b12 = p12 ? 1 : 0;
+    assign b13 = p13 ? 1 : 0;
+    assign b14 = p14 ? 1 : 0;
+    assign b15 = p15 ? 1 : 0;
+    assign b21 = p21 ? 1 : 0;
+    assign b22 = p22 ? 1 : 0;
+    assign b23 = p23 ? 1 : 0;
+    assign b24 = p24 ? 1 : 0;
+    assign b25 = p25 ? 1 : 0;
+    assign b31 = p31 ? 1 : 0;
+    assign b32 = p32 ? 1 : 0;
+    assign b33 = p33 ? 1 : 0;
+    assign b34 = p34 ? 1 : 0;
+    assign b35 = p35 ? 1 : 0;
+
+    assign sum = b11 + b12 + b13 + b14 + b15 + b21 + b22 + b23 + b24 + b25 + b31
+                + b32 + b33 + b34 + b35;
+
+    assign q = sum > threshold ? `MAX : 0;
+
+endmodule
