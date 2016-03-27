@@ -11,6 +11,7 @@ module top (
     input [`WORD_SIZE - 1:0] sobel_threshold,
     input [`WORD_SIZE - 1:0] flood_threshold,
     input [`WORD_SIZE - 1:0] obj_id,
+    output [`WORD_SIZE - 1:0] num_labels,
     output [`PIXEL_SIZE - 1:0] out,
     output [15:0] obj_x,
     output [15:0] obj_y
@@ -262,6 +263,7 @@ module top (
         .y(y),
         .p(flood_window_out),
         .obj_id(obj_id),
+        .num_labels(num_labels),
         .q(cc_out),
         .obj_x(obj_x),
         .obj_y(obj_y)

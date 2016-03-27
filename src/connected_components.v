@@ -24,6 +24,7 @@ module connected_components_labeling(
     input [15:0] x,
     input [15:0] y,
     input [`WORD_SIZE - 1:0] obj_id,
+    output [`WORD_SIZE - 1:0] num_labels,
     output [`WORD_SIZE - 1:0] q,
     output [15:0] obj_x,
     output [15:0] obj_y
@@ -174,7 +175,7 @@ module connected_components_labeling(
             data_valid[0] <= valid;
 
             // Label count
-            if (is_new_label) begin
+            if (is_new_label && num_labels < `MAX) begin
                 num_labels <= num_labels + 1;
             end else begin
                 num_labels <= num_labels;
