@@ -20,9 +20,9 @@ module top (
     // Row buffers
     reg [`WORD_SIZE - 1:0] buf7 [2:0];
 
-    reg [`WORD_SIZE - 1:0] buf5 [4:0];
-    reg [`WORD_SIZE - 1:0] buf4 [4:0];
-    reg [`WORD_SIZE - 1:0] buf3 [4:0];
+    reg buf5 [4:0];
+    reg buf4 [4:0];
+    reg buf3 [4:0];
 
     reg [`WORD_SIZE - 1:0] buf2 [2:0];
     reg [`WORD_SIZE - 1:0] buf1 [2:0];
@@ -37,7 +37,7 @@ module top (
     // Intermediate stages of output
     wire [`WORD_SIZE - 1:0] I;
     wire [`WORD_SIZE - 1:0] sobel_window_out;
-    wire [`WORD_SIZE - 1:0] flood_window_out;
+    wire flood_window_out;
     wire [`WORD_SIZE - 1:0] threshold_out;
     wire [`WORD_SIZE - 1:0] cc_out;
     wire [`PIXEL_SIZE - 1:0] color_out;
@@ -64,8 +64,8 @@ module top (
 
     wire [`WORD_SIZE - 1:0] queue1_out;
     wire [`WORD_SIZE - 1:0] queue2_out;
-    wire [`WORD_SIZE - 1:0] queue4_out;
-    wire [`WORD_SIZE - 1:0] queue5_out;
+    wire queue4_out;
+    wire queue5_out;
     wire [`WORD_SIZE - 1:0] queue7_out;
 
     queue #(
@@ -102,7 +102,7 @@ module top (
 
     queue #(
         .ADDR_WIDTH(11),
-        .DATA_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(1),
         .MAX_DEPTH(`FRAME_WIDTH - 5)
     )
     Q4 (
@@ -118,7 +118,7 @@ module top (
 
     queue #(
         .ADDR_WIDTH(11),
-        .DATA_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(1),
         .MAX_DEPTH(`FRAME_WIDTH - 5)
     )
     Q5 (
@@ -177,7 +177,7 @@ module top (
             buf3[3] <= buf3[2];
             buf3[2] <= buf3[1];
             buf3[1] <= buf3[0];
-            buf3[0] <= threshold_out;
+            buf3[0] <= threshold_out[0];
 
             // Sobel
             buf2[2] <= buf2[1];
@@ -244,7 +244,12 @@ module top (
     );
 
     // Threshold Sobel output to get a binary image.
-    threshold U3 (
+    threshold #(
+        .WIDTH(`WORD_SIZE),
+        .HI(1),
+        .LO(0)
+    )
+    U3 (
         .d(sobel_window_out),
         .threshold(sobel_threshold),
         .q(threshold_out)
@@ -283,8 +288,8 @@ module top (
     assign out =  (mode == `PASS) ?                {data} :
                   (mode == `GRAY) ?                {3{I}} :
                  (mode == `SOBEL) ? {3{sobel_window_out}} :
-                (mode == `THRESH) ?    {3{threshold_out}} :
-                 (mode == `FLOOD) ? {3{flood_window_out}} :
+                (mode == `THRESH) ? (threshold_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
+                 (mode == `FLOOD) ? (flood_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
                     (mode == `CC) ?           {3{cc_out}} :
                  (mode == `COLOR) ?           {color_out} :
                                     {3{sobel_window_out}} ;
