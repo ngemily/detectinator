@@ -13,6 +13,7 @@ module top (
     input [`WORD_SIZE - 1:0] obj_id,
     output [`WORD_SIZE - 1:0] num_labels,
     output [`PIXEL_SIZE - 1:0] out,
+    output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
     output [`LOC_SIZE - 1:0] obj_y
 );
@@ -272,6 +273,7 @@ module top (
         .obj_id(obj_id),
         .num_labels(num_labels),
         .q(cc_out),
+        .obj_area(obj_area),
         .obj_x(obj_x),
         .obj_y(obj_y)
     );

@@ -15,6 +15,7 @@ module tb();
     reg [`PIXEL_SIZE - 1:0] data;
     reg [`WORD_SIZE - 1:0] obj_id = 1;
     wire [`WORD_SIZE - 1:0] mode = `OUT;
+    wire [`LOC_SIZE - 1:0] obj_area;
     wire [`LOC_SIZE - 1:0] obj_x;
     wire [`LOC_SIZE - 1:0] obj_y;
     wire [7:0] num_labels;
@@ -53,6 +54,7 @@ module tb();
         .flood_threshold(`FLOOD_THRESHOLD),
         .obj_id(obj_id),
         .out(out),
+        .obj_area(obj_area),
         .obj_x(obj_x),
         .obj_y(obj_y),
         .num_labels(num_labels)
@@ -195,7 +197,7 @@ module tb();
         for (i = 0; i < 5; i++) begin
             #50
             obj_id <= obj_id + 1;
-            $display("%d: %d %d", obj_id, obj_x, obj_y);
+            $display("%d: %d %d", obj_id, obj_x / obj_area, obj_y / obj_area);
         end
 
         // Close files

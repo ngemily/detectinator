@@ -26,6 +26,7 @@ module connected_components_labeling(
     input [`WORD_SIZE - 1:0] obj_id,
     output reg [`WORD_SIZE - 1:0] num_labels,
     output [`WORD_SIZE - 1:0] q,
+    output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
     output [`LOC_SIZE - 1:0] obj_y
 );
@@ -199,12 +200,13 @@ module connected_components_labeling(
     assign q = (data_valid[1]) ? resolved_label : label_delay[1];
 
     // Output requested object location.
-    wire [`OBJ_WIDTH - 1:0] obj_area  = data_out2[1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] obj_a     = data_out2[1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
     wire [`OBJ_WIDTH - 1:0] obj_x_acc = data_out2[2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
     wire [`OBJ_WIDTH - 1:0] obj_y_acc = data_out2[3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
 
-    assign obj_x = obj_x_acc / obj_area;
-    assign obj_y = obj_y_acc / obj_area;
+    assign obj_area = obj_a[`LOC_SIZE - 1:0];
+    assign obj_x = obj_x_acc[`LOC_SIZE - 1:0];
+    assign obj_y = obj_y_acc[`LOC_SIZE - 1:0];
 endmodule
 
 /*
