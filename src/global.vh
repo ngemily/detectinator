@@ -23,7 +23,7 @@
 `define SIM_CFILE   "src/colors.dat"
 
 // input image size
-`define FRAME_WIDTH  550
+`define FRAME_WIDTH  1280
 `define FRAME_HEIGHT 1
 
 /**** Testbench setup ****/
@@ -43,6 +43,6 @@
 `define COLOR    5
 
 // set output mode to one of the above modes 
-`define OUT `CC
+`define OUT `COLOR
 
 `endif
