@@ -64,7 +64,7 @@ module connected_components_labeling(
         .max_label(max_label)
     );
 
-    wire valid = ~(is_new_label | is_background);    // no valid table entries
+    wire valid = en & ~(is_new_label | is_background);    // no valid table entries
 
     // Stack manager
     wire popped;
@@ -158,6 +158,13 @@ module connected_components_labeling(
         if (~reset_n) begin
             num_labels <= 1;        // 0 is reserved
         end else if (en) begin
+            // Label count
+            if (is_new_label && num_labels < `MAX) begin
+                num_labels <= num_labels + 1;
+            end
+        end
+
+        if (en) begin
             // Data valid
             //  Cheat (a little).  We know which values we have populated into
             //  the merge table, and we know what address we're reading this
@@ -165,13 +172,6 @@ module connected_components_labeling(
             data_valid[2] <= data_valid[1];
             data_valid[1] <= data_valid[0];
             data_valid[0] <= valid;
-
-            // Label count
-            if (is_new_label && num_labels < `MAX) begin
-                num_labels <= num_labels + 1;
-            end else begin
-                num_labels <= num_labels;
-            end
 
             // Register current label, to match the delay from reading from the
             // merge table.
