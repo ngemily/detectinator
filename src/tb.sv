@@ -156,7 +156,7 @@ module tb();
     // Termination sequence
     // ====================
     initial begin
-        #4_000_000
+        #`SIM_TIME
 
         // Write bitmap
         write_bmp_head(ifh, ofh);

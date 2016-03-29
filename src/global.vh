@@ -28,6 +28,7 @@
 
 /**** Testbench setup ****/
 `define DISP_RESOLVED_LABEL
+`define SIM_TIME 4_000_000
 
 /**** IP logic ****/
 `define SOBEL_THRESHOLD 8'd50
