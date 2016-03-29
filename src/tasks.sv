@@ -69,7 +69,7 @@ task read_bmp_head(
 
     reg [31:0] value_32;
     reg [23:0] value_24;
-    reg [`LOC_SIZE - 1:0] value_16;
+    reg [15:0] value_16;
     reg [7:0] value_8;
 
     // Read bitmap header
