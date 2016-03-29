@@ -208,6 +208,7 @@ module top (
     // ***----------        <buf1>
     // ***                  <buf0>
     sobel_window U0 (
+        .clk(clk),
         .p1(buf2[2]),
         .p2(buf2[1]),
         .p3(buf2[0]),
@@ -224,6 +225,7 @@ module top (
     // *****---
     // *****---
     flood_window U4 (
+        .clk(clk),
         .p11(buf5[4]),
         .p12(buf5[3]),
         .p13(buf5[2]),

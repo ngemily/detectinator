@@ -16,6 +16,7 @@
 *   +---+---+---+
 */
 module sobel_window(
+    input clk,
     input [`WORD_SIZE - 1:0] p1,
     input [`WORD_SIZE - 1:0] p2,
     input [`WORD_SIZE - 1:0] p3,
@@ -25,7 +26,7 @@ module sobel_window(
     input [`WORD_SIZE - 1:0] p7,
     input [`WORD_SIZE - 1:0] p8,
     input [`WORD_SIZE - 1:0] p9,
-    output [`WORD_SIZE - 1:0] q
+    output reg [`WORD_SIZE - 1:0] q
 );
     wire signed [`WORD_SIZE - 1:0] dx;
     wire signed [`WORD_SIZE - 1:0] dy;
@@ -37,10 +38,13 @@ module sobel_window(
     assign abs_dx = (dx < 0) ? -dx : dx;
     assign abs_dy = (dy < 0) ? -dy : dy;
 
-    assign q = abs_dx + abs_dy;
+    always @(posedge clk) begin
+        q <= abs_dx + abs_dy;
+    end
 endmodule
 
 module flood_window(
+    input clk,
     input p11,
     input p12,
     input p13,
@@ -57,13 +61,20 @@ module flood_window(
     input p34,
     input p35,
     input [`WORD_SIZE - 1:0] threshold,
-    output q
+    output reg q
 );
     wire [`WORD_SIZE - 1:0] sum;
 
     assign sum = p11 + p12 + p13 + p14 + p15 + p21 + p22 + p23 + p24 + p25 + p31
                 + p32 + p33 + p34 + p35;
 
-    assign q = sum > threshold ? 1'b1 : 1'b0;
+
+    always @(posedge clk) begin
+        if (sum > threshold) begin
+            q <= 1'b1;
+        end else begin
+            q <= 1'b0;
+        end
+    end
 
 endmodule
