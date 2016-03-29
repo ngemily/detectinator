@@ -29,15 +29,10 @@ module connected_components_labeling(
     output [`LOC_SIZE - 1:0] obj_x,
     output [`LOC_SIZE - 1:0] obj_y
 );
-    // Data table parameters
-    localparam NUM_OBJS  = 3;       // How many features are we collecting?
-    localparam OBJ_WIDTH = 128;     // Data width of each feature.
-    localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
-
     // Pipeline registers
     reg [`WORD_SIZE - 1:0] label_delay  [1:0];
     reg [`WORD_SIZE - 1:0] q_delay;
-    reg [D_WIDTH - 1:0]    p_delay      [2:0];
+    reg [`D_WIDTH - 1:0]    p_delay      [2:0];
     reg                    data_valid   [2:0];
 
     // Label selection/Merge table
@@ -120,19 +115,19 @@ module connected_components_labeling(
     wire [`WORD_SIZE - 1:0] r_addr2;
     wire [`WORD_SIZE - 1:0] w_addr;
 
-    wire [D_WIDTH - 1:0] data_in;
-    wire [D_WIDTH - 1:0] data_out1;
-    wire [D_WIDTH - 1:0] data_out2;
+    wire [`D_WIDTH - 1:0] data_in;
+    wire [`D_WIDTH - 1:0] data_out1;
+    wire [`D_WIDTH - 1:0] data_out2;
 
     // Feed into SR
-    wire [OBJ_WIDTH - 1:0] p_in = p;
-    wire [OBJ_WIDTH - 1:0] xp   = x * p;
-    wire [OBJ_WIDTH - 1:0] yp   = y * p;
+    wire [`OBJ_WIDTH - 1:0] p_in = p;
+    wire [`OBJ_WIDTH - 1:0] xp   = x * p;
+    wire [`OBJ_WIDTH - 1:0] yp   = y * p;
 
     // Coming out of SR
-    wire [OBJ_WIDTH - 1:0] p_acc = data_out1[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] x_acc = data_out1[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] y_acc = data_out1[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH] + p_delay[2][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] p_acc = data_out1[1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] x_acc = data_out1[2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] y_acc = data_out1[3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
 
     // Data layout
     //  0 15:0  - 00
@@ -146,7 +141,7 @@ module connected_components_labeling(
 
     ram_dr_sw #(
         .ADDR_WIDTH(`WORD_SIZE),
-        .DATA_WIDTH(D_WIDTH)
+        .DATA_WIDTH(`D_WIDTH)
     )
     DATA_TABLE (
         .clk(clk),
@@ -204,9 +199,9 @@ module connected_components_labeling(
     assign q = (data_valid[1]) ? resolved_label : label_delay[1];
 
     // Output requested object location.
-    wire [OBJ_WIDTH - 1:0] obj_area = data_out2[1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] obj_x_acc = data_out2[2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-    wire [OBJ_WIDTH - 1:0] obj_y_acc = data_out2[3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] obj_area  = data_out2[1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] obj_x_acc = data_out2[2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] obj_y_acc = data_out2[3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
 
     assign obj_x = obj_x_acc / obj_area;
     assign obj_y = obj_y_acc / obj_area;

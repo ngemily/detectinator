@@ -215,14 +215,10 @@ task draw_dots(
     input integer bytes_per_row,
     input integer rows,
     inout reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE],
-    input reg [383:0] data_table[0:255]
+    input reg [`D_WIDTH - 1:0] data_table[0:255]
 );
     parameter WIDTH = 384;//`WORD_SIZE;
     parameter DEPTH = 255; //`MEM_SIZE;
-
-    localparam NUM_OBJS  = 3;
-    localparam OBJ_WIDTH = 128;
-    localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
 
     integer i, idx;
     longint unsigned p_acc;
@@ -235,9 +231,9 @@ task draw_dots(
 
     $display("%16s %16s %16s %16s", "x_bar", "y_bar", "x", "y");
     for (i = 0; i < DEPTH; i++) begin
-        p_acc = data_table[i][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-        x_acc = data_table[i][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-        y_acc = data_table[i][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        p_acc = data_table[i][1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+        x_acc = data_table[i][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+        y_acc = data_table[i][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
         x_bar = x_acc / p_acc;
         y_bar = y_acc / p_acc;
         x = y_bar;
@@ -290,14 +286,10 @@ endtask
 
 task dump_data (
     input integer ofh,
-    input reg [383:0] mem[0:255]
+    input reg [`D_WIDTH - 1:0] mem[0:255]
 );
     parameter WIDTH = 384;//`WORD_SIZE;
     parameter DEPTH = 20; //`MEM_SIZE;
-
-    localparam NUM_OBJS  = 3;
-    localparam OBJ_WIDTH = 128;
-    localparam D_WIDTH   = NUM_OBJS * OBJ_WIDTH;
 
     integer i;
     longint unsigned p_acc;
@@ -310,9 +302,9 @@ task dump_data (
         "label", "area", "xacc", "yacc", "xbar", "ybar");
 
     for (i = 0; i < DEPTH; i++) begin
-        p_acc = mem[i][1 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-        x_acc = mem[i][2 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
-        y_acc = mem[i][3 * OBJ_WIDTH - 1 -: OBJ_WIDTH];
+        p_acc = mem[i][1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+        x_acc = mem[i][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+        y_acc = mem[i][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
         x_bar = x_acc / p_acc;
         y_bar = y_acc / p_acc;
 

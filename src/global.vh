@@ -11,6 +11,11 @@
 `define PIXEL_SIZE 24
 `define LOC_SIZE   16
 
+// Data table parameters
+`define NUM_FEATURES 3
+`define OBJ_WIDTH    32
+`define D_WIDTH      (`NUM_FEATURES * `OBJ_WIDTH)
+
 /**** Input/output files ****/
 `define IFILE       "imgs/alien.bmp"
 `define OFILE       "out/out.bmp"
