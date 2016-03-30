@@ -149,7 +149,7 @@ module top (
     queue #(
         .ADDR_WIDTH(11),
         .DATA_WIDTH(`LBL_WIDTH),
-        .MAX_DEPTH(`FRAME_WIDTH - 5)
+        .MAX_DEPTH(`FRAME_WIDTH - 4)
     )
     Q9 (
         .clk(clk),
