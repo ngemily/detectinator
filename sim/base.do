@@ -8,5 +8,5 @@ vlog src/mem.v
 vlog src/sobel.v
 vlog src/util.v
 
-vlog src/top.v
+vlog +define+RTL_SIM src/top.v
 vlog +define+RTL_SIM src/tb.sv

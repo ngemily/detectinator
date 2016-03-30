@@ -34,7 +34,7 @@ endmodule
 * Max function on 4 inputs.
 */
 module max4 #(
-    parameter WIDTH = `WORD_SIZE
+    parameter WIDTH = `LBL_WIDTH
 ) (
     input [WIDTH - 1:0] A,
     input [WIDTH - 1:0] B,
@@ -54,7 +54,7 @@ endmodule
 * Min function of 4 inputs.
 */
 module min4 #(
-    parameter WIDTH = `WORD_SIZE
+    parameter WIDTH = `LBL_WIDTH
 ) (
     input [WIDTH - 1:0] A,
     input [WIDTH - 1:0] B,

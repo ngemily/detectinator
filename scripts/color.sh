@@ -5,7 +5,7 @@
 # Usage:
 #   ./color.sh
 
-for i in {0..255}; do
+for i in {0..4096}; do
     R=$[${RANDOM}%255]
     G=$[${RANDOM}%255]
     B=$[${RANDOM}%255]

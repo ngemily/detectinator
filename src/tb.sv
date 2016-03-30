@@ -13,12 +13,12 @@ module tb();
     reg reset_n;
     reg en;
     reg [`PIXEL_SIZE - 1:0] data;
-    reg [`WORD_SIZE - 1:0] obj_id = 1;
+    reg [`LBL_WIDTH - 1:0] obj_id = 1;
     wire [`WORD_SIZE - 1:0] mode = `OUT;
     wire [`LOC_SIZE - 1:0] obj_area;
     wire [`LOC_SIZE - 1:0] obj_x;
     wire [`LOC_SIZE - 1:0] obj_y;
-    wire [7:0] num_labels;
+    wire [`LBL_WIDTH - 1:0] num_labels;
 
     // Outputs
     reg [`PIXEL_SIZE - 1:0] out;
@@ -39,7 +39,7 @@ module tb();
     wire [`LOC_SIZE - 1:0] frame;
 
     reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE];
-    reg [`PIXEL_SIZE - 1:0] color_table[0:`C_TABLE_SIZE];
+    reg [`PIXEL_SIZE - 1:0] color_table[0:`MAX_LABEL];
 
     // Instantiate the Unit Under Test (DUT)
     top dut (
@@ -163,12 +163,14 @@ module tb();
         write_bmp_head(ifh, ofh);
 
 `ifdef RTL_SIM
-        if (mode == `CC) begin
-            color_labels(
-                .bytes_per_row(width * bytes_per_pixel),
-                .rows(height),
-                .mem(mem)
-            );
+        if (mode == `CC || mode == `COLOR) begin
+            if (mode == `CC) begin
+                color_labels(
+                    .bytes_per_row(width * bytes_per_pixel),
+                    .rows(height),
+                    .mem(mem)
+                );
+            end
 
             draw_dots(
                 .bytes_per_row(width * bytes_per_pixel),

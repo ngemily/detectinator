@@ -16,28 +16,28 @@ module connected_components_labeling(
     input clk,
     input reset_n,
     input en,
-    input [`WORD_SIZE - 1:0] A,
-    input [`WORD_SIZE - 1:0] B,
-    input [`WORD_SIZE - 1:0] C,
-    input [`WORD_SIZE - 1:0] D,
+    input [`LBL_WIDTH - 1:0] A,
+    input [`LBL_WIDTH - 1:0] B,
+    input [`LBL_WIDTH - 1:0] C,
+    input [`LBL_WIDTH - 1:0] D,
     input p,
     input [`LOC_SIZE - 1:0] x,
     input [`LOC_SIZE - 1:0] y,
-    input [`WORD_SIZE - 1:0] obj_id,
-    output reg [`WORD_SIZE - 1:0] num_labels,
-    output [`WORD_SIZE - 1:0] q,
+    input [`LBL_WIDTH - 1:0] obj_id,
+    output reg [`LBL_WIDTH - 1:0] num_labels,
+    output [`LBL_WIDTH - 1:0] q,
     output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
     output [`LOC_SIZE - 1:0] obj_y
 );
     // Pipeline registers
-    reg [`WORD_SIZE - 1:0] label_delay  [1:0];
-    reg [`WORD_SIZE - 1:0] q_delay;
+    reg [`LBL_WIDTH - 1:0] label_delay  [1:0];
+    reg [`LBL_WIDTH - 1:0] q_delay;
     reg [`D_WIDTH - 1:0]    p_delay      [2:0];
     reg                    data_valid   [2:0];
 
     // Label selection/Merge table
-    reg [`WORD_SIZE * 2 - 1:0] stack_entry_delay;
+    reg [`LBL_WIDTH * 2 - 1:0] stack_entry_delay;
 
     // Merge stack/Merge table
     reg is_merge_delay;
@@ -46,9 +46,9 @@ module connected_components_labeling(
     wire is_background;
     wire is_new_label;
     wire is_merge;
-    wire [`WORD_SIZE - 1:0] min_label;
-    wire [`WORD_SIZE - 1:0] max_label;
-    wire [`WORD_SIZE - 1:0] label;
+    wire [`LBL_WIDTH - 1:0] min_label;
+    wire [`LBL_WIDTH - 1:0] max_label;
+    wire [`LBL_WIDTH - 1:0] label;
 
     label_selector U2(
         .A(A),
@@ -70,8 +70,8 @@ module connected_components_labeling(
     // Stack manager
     wire popped;
     wire stack_sel;
-    wire [`WORD_SIZE * 2 - 1:0] stack_top;
-    wire [`WORD_SIZE * 2 - 1:0] stack_entry;    // Assume max one merge per neighbourhood.
+    wire [`LBL_WIDTH * 2 - 1:0] stack_top;
+    wire [`LBL_WIDTH * 2 - 1:0] stack_entry;    // Assume max one merge per neighbourhood.
 
     assign stack_entry = {max_label, min_label};
     assign stack_sel   = y[0];
@@ -90,16 +90,16 @@ module connected_components_labeling(
     wire write_merge          = popped | is_new_label;
     wire resolved_label_valid = data_valid[1];
 
-    wire [`WORD_SIZE - 1:0] index;
-    wire [`WORD_SIZE - 1:0] target;
-    wire [`WORD_SIZE - 1:0] resolved_label;
+    wire [`LBL_WIDTH - 1:0] index;
+    wire [`LBL_WIDTH - 1:0] target;
+    wire [`LBL_WIDTH - 1:0] resolved_label;
 
-    assign index  = (is_new_label) ? num_labels : stack_top[15:8];
-    assign target = (is_new_label) ? num_labels :  stack_top[7:0];
+    assign index  = (is_new_label) ? num_labels : stack_top[2 * `LBL_WIDTH - 1 -: `LBL_WIDTH];
+    assign target = (is_new_label) ? num_labels : stack_top[1 * `LBL_WIDTH - 1 -: `LBL_WIDTH];
 
     ram #(
-        .ADDR_WIDTH(`WORD_SIZE),
-        .DATA_WIDTH(`WORD_SIZE)
+        .ADDR_WIDTH(`LBL_WIDTH),
+        .DATA_WIDTH(`LBL_WIDTH)
     )
     MERGE_TABLE (
         .clk(clk),
@@ -112,9 +112,9 @@ module connected_components_labeling(
 
 
     // Data table
-    wire [`WORD_SIZE - 1:0] r_addr1;
-    wire [`WORD_SIZE - 1:0] r_addr2;
-    wire [`WORD_SIZE - 1:0] w_addr;
+    wire [`LBL_WIDTH - 1:0] r_addr1;
+    wire [`LBL_WIDTH - 1:0] r_addr2;
+    wire [`LBL_WIDTH - 1:0] w_addr;
 
     wire [`D_WIDTH - 1:0] data_in;
     wire [`D_WIDTH - 1:0] data_out1;
@@ -141,7 +141,7 @@ module connected_components_labeling(
     assign data_in = (data_valid[2]) ? {y_acc, x_acc, p_acc} : p_delay[2] ;
 
     ram_dr_sw #(
-        .ADDR_WIDTH(`WORD_SIZE),
+        .ADDR_WIDTH(`LBL_WIDTH),
         .DATA_WIDTH(`D_WIDTH)
     )
     DATA_TABLE (
@@ -160,7 +160,7 @@ module connected_components_labeling(
             num_labels <= 1;        // 0 is reserved
         end else if (en) begin
             // Label count
-            if (is_new_label && num_labels < `MAX) begin
+            if (is_new_label && num_labels < `MAX_LABEL - 1) begin
                 num_labels <= num_labels + 1;
             end
         end
@@ -218,9 +218,9 @@ module merge_ctrl(
     input reset_n,
     input push,
     input stack_sel,
-    input [`WORD_SIZE * 2 - 1:0] stack_entry,
+    input [`LBL_WIDTH * 2 - 1:0] stack_entry,
     output reg popped,
-    output [`WORD_SIZE * 2 - 1:0] stack_top
+    output [`LBL_WIDTH * 2 - 1:0] stack_top
 );
     wire push_0;
     wire pop_0;
@@ -232,12 +232,12 @@ module merge_ctrl(
     wire full_1;
     wire empty_1;
 
-    wire [`WORD_SIZE * 2 - 1:0] stack0_top;
-    wire [`WORD_SIZE * 2 - 1:0] stack1_top;
+    wire [`LBL_WIDTH * 2 - 1:0] stack0_top;
+    wire [`LBL_WIDTH * 2 - 1:0] stack1_top;
 
     stack #(
         .ADDR_WIDTH(`WORD_SIZE),
-        .DATA_WIDTH(`WORD_SIZE * 2)
+        .DATA_WIDTH(`LBL_WIDTH * 2)
     )
     U0 (
         .clk(clk),
@@ -252,7 +252,7 @@ module merge_ctrl(
 
     stack #(
         .ADDR_WIDTH(`WORD_SIZE),
-        .DATA_WIDTH(`WORD_SIZE * 2)
+        .DATA_WIDTH(`LBL_WIDTH * 2)
     )
     U1 (
         .clk(clk),
@@ -281,23 +281,23 @@ module merge_ctrl(
 endmodule
 
 module label_selector(
-    input [`WORD_SIZE - 1:0] A,
-    input [`WORD_SIZE - 1:0] B,
-    input [`WORD_SIZE - 1:0] C,
-    input [`WORD_SIZE - 1:0] D,
+    input [`LBL_WIDTH - 1:0] A,
+    input [`LBL_WIDTH - 1:0] B,
+    input [`LBL_WIDTH - 1:0] C,
+    input [`LBL_WIDTH - 1:0] D,
     input p,
-    input [`WORD_SIZE - 1:0] num_labels,
+    input [`LBL_WIDTH - 1:0] num_labels,
     output is_background,
     output is_new_label,
     output is_merge,
-    output [`WORD_SIZE - 1:0] label,
-    output [`WORD_SIZE - 1:0] min_label,
-    output [`WORD_SIZE - 1:0] max_label
+    output [`LBL_WIDTH - 1:0] label,
+    output [`LBL_WIDTH - 1:0] min_label,
+    output [`LBL_WIDTH - 1:0] max_label
 );
-    wire [`WORD_SIZE - 1:0] _A;
-    wire [`WORD_SIZE - 1:0] _B;
-    wire [`WORD_SIZE - 1:0] _C;
-    wire [`WORD_SIZE - 1:0] _D;
+    wire [`LBL_WIDTH - 1:0] _A;
+    wire [`LBL_WIDTH - 1:0] _B;
+    wire [`LBL_WIDTH - 1:0] _C;
+    wire [`LBL_WIDTH - 1:0] _D;
 
     wire copy_a;
     wire copy_b;
@@ -325,10 +325,10 @@ module label_selector(
     assign is_merge = ~(is_background | is_new_label | copy_a | copy_b | copy_c | copy_d);
 
     // Don't want to count 0 in min label.
-    assign _A = (A == 0) ? `MAX : A;
-    assign _B = (B == 0) ? `MAX : B;
-    assign _C = (C == 0) ? `MAX : C;
-    assign _D = (D == 0) ? `MAX : D;
+    assign _A = (A == 0) ? `MAX_LABEL : A;
+    assign _B = (B == 0) ? `MAX_LABEL : B;
+    assign _C = (C == 0) ? `MAX_LABEL : C;
+    assign _D = (D == 0) ? `MAX_LABEL : D;
 
     min4 M0(_A, _B, _C, _D, min_label);
     max4 M1(A, B, C, D, max_label);

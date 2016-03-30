@@ -189,13 +189,13 @@ task color_labels(
     for (i = 0; i < rows; i++) begin
         for (j = 0; j < bytes_per_row; j += 3) begin
             idx            = i * bytes_per_row + j;
-            label          = mem[idx];
+            label          = {mem[idx + 1], mem[idx]};
 `ifdef DISP_RESOLVED_LABEL
-            resolved_label = tb.dut.U2.MERGE_TABLE.mem[label[7:0]];
+            resolved_label = tb.dut.U2.MERGE_TABLE.mem[label[`LBL_WIDTH:0]];
 `else
             resolved_label = label;
 `endif
-            color          = tb.color_table[resolved_label[7:0]];
+            color          = tb.color_table[resolved_label[`LBL_WIDTH:0]];
 
             //$display("%h %h %h", label, resolved_label, color);
 
@@ -215,7 +215,7 @@ task draw_dots(
     input integer bytes_per_row,
     input integer rows,
     inout reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE],
-    input reg [`D_WIDTH - 1:0] data_table[0:255]
+    input reg [`D_WIDTH - 1:0] data_table[0:`MAX_LABEL]
 );
     parameter WIDTH = 384;//`WORD_SIZE;
     parameter DEPTH = 255; //`MEM_SIZE;
@@ -286,7 +286,7 @@ endtask
 
 task dump_data (
     input integer ofh,
-    input reg [`D_WIDTH - 1:0] mem[0:255]
+    input reg [`D_WIDTH - 1:0] mem[0:`MAX_LABEL]
 );
     parameter WIDTH = 384;//`WORD_SIZE;
     parameter DEPTH = 20; //`MEM_SIZE;

@@ -11,8 +11,8 @@ module top (
     input [`WORD_SIZE - 1:0] sobel_threshold,
     input [`WORD_SIZE - 1:0] flood1_threshold,
     input [`WORD_SIZE - 1:0] flood2_threshold,
-    input [`WORD_SIZE - 1:0] obj_id,
-    output [`WORD_SIZE - 1:0] num_labels,
+    input [`LBL_WIDTH - 1:0] obj_id,
+    output [`LBL_WIDTH - 1:0] num_labels,
     output [`PIXEL_SIZE - 1:0] out,
     output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
@@ -20,7 +20,7 @@ module top (
 );
     /*  Internal registers */
     // Row buffers
-    reg [`WORD_SIZE - 1:0] buf9 [2:0];
+    reg [`LBL_WIDTH - 1:0] buf9 [2:0];
 
     reg buf8 [4:0];
     reg buf7 [4:0];
@@ -47,7 +47,7 @@ module top (
     wire flood2_window_out;
     wire cc_in = (mode[`FLOOD2_BIT]) ? flood2_window_out : flood1_window_out;
     wire [`WORD_SIZE - 1:0] threshold_out;
-    wire [`WORD_SIZE - 1:0] cc_out;
+    wire [`LBL_WIDTH - 1:0] cc_out;
     wire [`PIXEL_SIZE - 1:0] color_out;
 
     // Line buffer signals
@@ -140,11 +140,11 @@ module top (
     endgenerate
 
     // Connected components buffer: 1x3
-    wire [`WORD_SIZE - 1:0] queue9_out;
+    wire [`LBL_WIDTH - 1:0] queue9_out;
 
     queue #(
         .ADDR_WIDTH(11),
-        .DATA_WIDTH(`WORD_SIZE),
+        .DATA_WIDTH(`LBL_WIDTH),
         .MAX_DEPTH(`FRAME_WIDTH - 5)
     )
     Q9 (
@@ -312,9 +312,13 @@ module top (
     );
 
     rom #(
-        .ADDR_WIDTH(8),
+        .ADDR_WIDTH(`LBL_WIDTH),
         .DATA_WIDTH(`PIXEL_SIZE),
+`ifdef RTL_SIM
+        .INIT_FILE(`SIM_CFILE)
+`else
         .INIT_FILE(`SYNTH_CFILE)
+`endif
     )
     COLOR_TABLE (
         .clk(clk),
@@ -328,7 +332,7 @@ module top (
                 (mode == `THRESH) ? (threshold_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
                 (mode == `FLOOD1) ? (flood1_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
                 (mode == `FLOOD2) ? (flood2_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
-                    (mode == `CC) ?           {3{cc_out}} :
+                    (mode == `CC) ?              {cc_out} :
                  (mode == `COLOR) ?           {color_out} :
                                     {3{sobel_window_out}} ;
 endmodule

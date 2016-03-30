@@ -3,13 +3,16 @@
 
 /**** Memory setup ****/
 `define MEM_SIZE     'h10_0000
-`define C_TABLE_SIZE 255
 
 `define WORD_SIZE  8
 `define MAX        255
 `define MIN        0
 `define PIXEL_SIZE 24
 `define LOC_SIZE   24
+
+// Maximum number of labels
+`define LBL_WIDTH   12
+`define MAX_LABEL   4095
 
 // Data table parameters
 `define NUM_FEATURES 3
