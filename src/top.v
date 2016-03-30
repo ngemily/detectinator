@@ -12,11 +12,15 @@ module top (
     input [`WORD_SIZE - 1:0] flood1_threshold,
     input [`WORD_SIZE - 1:0] flood2_threshold,
     input [`LBL_WIDTH - 1:0] obj_id,
-    output [`LBL_WIDTH - 1:0] num_labels,
+`ifndef STANDALONE
     output [`PIXEL_SIZE - 1:0] out,
+    output [`LBL_WIDTH - 1:0] num_labels,
     output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
     output [`LOC_SIZE - 1:0] obj_y
+`else
+    output [`PIXEL_SIZE - 1:0] out
+`endif
 );
     /*  Internal registers */
     // Row buffers
@@ -304,11 +308,15 @@ module top (
         .y(y),
         .p(flood2_window_out),
         .obj_id(obj_id),
-        .num_labels(num_labels),
+`ifndef STANDALONE
         .q(cc_out),
+        .num_labels(num_labels),
         .obj_area(obj_area),
         .obj_x(obj_x),
         .obj_y(obj_y)
+`else
+        .q(cc_out)
+`endif
     );
 
     rom #(

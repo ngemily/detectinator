@@ -24,12 +24,20 @@ module connected_components_labeling(
     input [`LOC_SIZE - 1:0] x,
     input [`LOC_SIZE - 1:0] y,
     input [`LBL_WIDTH - 1:0] obj_id,
-    output reg [`LBL_WIDTH - 1:0] num_labels,
+`ifndef STANDALONE
     output [`LBL_WIDTH - 1:0] q,
+    output reg [`LBL_WIDTH - 1:0] num_labels,
     output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
     output [`LOC_SIZE - 1:0] obj_y
+`else
+    output [`LBL_WIDTH - 1:0] q
+`endif
 );
+
+`ifdef STANDALONE
+    reg [`LBL_WIDTH - 1:0] num_labels;
+`endif
     // Pipeline registers
     reg [`LBL_WIDTH - 1:0] label_delay  [1:0];
     reg [`LBL_WIDTH - 1:0] q_delay;
