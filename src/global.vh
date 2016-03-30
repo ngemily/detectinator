@@ -32,14 +32,16 @@
 
 /**** IP logic ****/
 `define SOBEL_THRESHOLD 8'd50
-`define FLOOD_THRESHOLD 8'd3
+`define FLOOD_THRESHOLD 8'd5
 
 /**** Output mode ****/
+`define FLOOD2_BIT 7
 `define PASS     0
 `define GRAY     1
 `define SOBEL    2
-`define FLOOD    7
 `define THRESH   3
+`define FLOOD1   7
+`define FLOOD2   8
 `define CC       4
 `define COLOR    5
 

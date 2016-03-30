@@ -9,7 +9,8 @@ module top (
     input [`PIXEL_SIZE - 1:0] data,
     input [`WORD_SIZE - 1:0] mode,
     input [`WORD_SIZE - 1:0] sobel_threshold,
-    input [`WORD_SIZE - 1:0] flood_threshold,
+    input [`WORD_SIZE - 1:0] flood1_threshold,
+    input [`WORD_SIZE - 1:0] flood2_threshold,
     input [`WORD_SIZE - 1:0] obj_id,
     output [`WORD_SIZE - 1:0] num_labels,
     output [`PIXEL_SIZE - 1:0] out,
@@ -19,7 +20,11 @@ module top (
 );
     /*  Internal registers */
     // Row buffers
-    reg [`WORD_SIZE - 1:0] buf7 [2:0];
+    reg [`WORD_SIZE - 1:0] buf9 [2:0];
+
+    reg buf8 [4:0];
+    reg buf7 [4:0];
+    reg buf6 [4:0];
 
     reg buf5 [4:0];
     reg buf4 [4:0];
@@ -38,115 +43,119 @@ module top (
     // Intermediate stages of output
     wire [`WORD_SIZE - 1:0] I;
     wire [`WORD_SIZE - 1:0] sobel_window_out;
-    wire flood_window_out;
+    wire flood1_window_out;
+    wire flood2_window_out;
+    wire cc_in = (mode[`FLOOD2_BIT]) ? flood2_window_out : flood1_window_out;
     wire [`WORD_SIZE - 1:0] threshold_out;
     wire [`WORD_SIZE - 1:0] cc_out;
     wire [`PIXEL_SIZE - 1:0] color_out;
 
+    // Line buffer signals
+    wire [9:1] empty;
+    wire [9:1] full;
 
-    integer i;
+    // Sobel line buffers: 3x3
+    wire [`WORD_SIZE - 1:0] sobel_queue_in [2:1];
+    wire [`WORD_SIZE - 1:0] sobel_queue_out [2:1];
 
-    wire empty_1, full_1;
-    wire empty_2, full_2;
-    wire empty_4, full_4;
-    wire empty_5, full_5;
-    wire empty_7, full_7;
+    assign sobel_queue_in[2] = buf1[2];
+    assign sobel_queue_in[1] = buf0[2];
 
-    wire enqueue_1 = en;
-    wire dequeue_1 = en & full_1;
-    wire enqueue_2 = en;
-    wire dequeue_2 = en & full_2;
-    wire enqueue_4 = en;
-    wire dequeue_4 = en & full_4;
-    wire enqueue_5 = en;
-    wire dequeue_5 = en & full_5;
-    wire enqueue_7 = en;
-    wire dequeue_7 = en & full_7;
+    genvar i;
+    generate
+        for (i = 1; i < 1 + 2; i = i + 1) begin
+            queue #(
+                .ADDR_WIDTH(11),
+                .DATA_WIDTH(`WORD_SIZE),
+                .MAX_DEPTH(`FRAME_WIDTH - 3)
+            )
+            Q4 (
+                .clk(clk),
+                .reset_n(reset_n),
+                .enqueue(en),
+                .dequeue(en & full[i]),
+                .data_in(sobel_queue_in[i]),
+                .data_out(sobel_queue_out[i]),
+                .empty(empty[i]),
+                .full(full[i])
+            );
 
-    wire [`WORD_SIZE - 1:0] queue1_out;
-    wire [`WORD_SIZE - 1:0] queue2_out;
-    wire queue4_out;
-    wire queue5_out;
-    wire [`WORD_SIZE - 1:0] queue7_out;
+        end
+    endgenerate
+
+    // flood1 line buffers: 3x5
+    wire [5:4] flood1_queue_out;
+    wire [5:4] flood1_queue_in;
+
+    assign flood1_queue_in[4] = buf3[4];
+    assign flood1_queue_in[5] = buf4[4];
+
+    generate
+        for (i = 4; i < 4 + 2; i = i + 1) begin
+            queue #(
+                .ADDR_WIDTH(11),
+                .DATA_WIDTH(1),
+                .MAX_DEPTH(`FRAME_WIDTH - 5)
+            )
+            Q4 (
+                .clk(clk),
+                .reset_n(reset_n),
+                .enqueue(en),
+                .dequeue(en & full[i]),
+                .data_in(flood1_queue_in[i]),
+                .data_out(flood1_queue_out[i]),
+                .empty(empty[i]),
+                .full(full[i])
+            );
+
+        end
+    endgenerate
+
+    // Flood line buffers: 3x5
+    wire [8:7] flood2_queue_out;
+    wire [8:7] flood2_queue_in;
+
+    assign flood2_queue_in[7] = buf6[4];
+    assign flood2_queue_in[8] = buf7[4];
+
+    generate
+        for (i = 7; i < 7 + 2; i = i + 1) begin
+            queue #(
+                .ADDR_WIDTH(11),
+                .DATA_WIDTH(1),
+                .MAX_DEPTH(`FRAME_WIDTH - 5)
+            )
+            Q4 (
+                .clk(clk),
+                .reset_n(reset_n),
+                .enqueue(en),
+                .dequeue(en & full[i]),
+                .data_in(flood2_queue_in[i]),
+                .data_out(flood2_queue_out[i]),
+                .empty(empty[i]),
+                .full(full[i])
+            );
+
+        end
+    endgenerate
+
+    // Connected components buffer: 1x3
+    wire [`WORD_SIZE - 1:0] queue9_out;
 
     queue #(
         .ADDR_WIDTH(11),
         .DATA_WIDTH(`WORD_SIZE),
-        .MAX_DEPTH(`FRAME_WIDTH - 3)
-    )
-    Q1 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .enqueue(enqueue_1),
-        .dequeue(dequeue_1),
-        .data_in(buf0[2]),
-        .data_out(queue1_out),
-        .empty(empty_1),
-        .full(full_1)
-    );
-
-    queue #(
-        .ADDR_WIDTH(11),
-        .DATA_WIDTH(`WORD_SIZE),
-        .MAX_DEPTH(`FRAME_WIDTH - 3)
-    )
-    Q2 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .enqueue(enqueue_2),
-        .dequeue(dequeue_2),
-        .data_in(buf1[2]),
-        .data_out(queue2_out),
-        .empty(empty_2),
-        .full(full_2)
-    );
-
-    queue #(
-        .ADDR_WIDTH(11),
-        .DATA_WIDTH(1),
         .MAX_DEPTH(`FRAME_WIDTH - 5)
     )
-    Q4 (
+    Q9 (
         .clk(clk),
         .reset_n(reset_n),
-        .enqueue(enqueue_4),
-        .dequeue(dequeue_4),
-        .data_in(buf3[4]),
-        .data_out(queue4_out),
-        .empty(empty_4),
-        .full(full_4)
-    );
-
-    queue #(
-        .ADDR_WIDTH(11),
-        .DATA_WIDTH(1),
-        .MAX_DEPTH(`FRAME_WIDTH - 5)
-    )
-    Q5 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .enqueue(enqueue_5),
-        .dequeue(dequeue_5),
-        .data_in(buf4[4]),
-        .data_out(queue5_out),
-        .empty(empty_5),
-        .full(full_5)
-    );
-
-    queue #(
-        .ADDR_WIDTH(11),
-        .DATA_WIDTH(`WORD_SIZE),
-        .MAX_DEPTH(`FRAME_WIDTH - 5)
-    )
-    Q7 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .enqueue(enqueue_7),
-        .dequeue(dequeue_7),
+        .enqueue(en),
+        .dequeue(en & full[9]),
         .data_in(cc_out),
-        .data_out(queue7_out),
-        .empty(empty_7),
-        .full(full_7)
+        .data_out(queue9_out),
+        .empty(empty[9]),
+        .full(full[9])
     );
 
     // Set up row buffers:
@@ -154,43 +163,43 @@ module top (
     //  +--+ +--+ +--+ +----------------------+
     //  |  |-|  |-|  |-|                      |
     //  +--+ +--+ +--+ +----------------------+
+    integer j;
     always @(posedge clk) begin
         if (en) begin
             // Connected Components
-            buf7[2] <= buf7[1];
-            buf7[1] <= buf7[0];
-            buf7[0] <= queue7_out;
+            for (j = 2; j > 0; j = j - 1) begin
+                buf9[j] <= buf9[j - 1];
+            end
+            buf9[0] <= queue9_out;
 
             // Flood
-            buf5[4] <= buf5[3];
-            buf5[3] <= buf5[2];
-            buf5[2] <= buf5[1];
-            buf5[1] <= buf5[0];
-            buf5[0] <= queue5_out;
+            for (j = 4; j > 0; j = j - 1) begin
+                buf8[j] <= buf8[j - 1];
+                buf7[j] <= buf7[j - 1];
+                buf6[j] <= buf6[j - 1];
+            end
+            buf8[0] <= flood2_queue_out[8];
+            buf7[0] <= flood2_queue_out[7];
+            buf6[0] <= flood1_window_out;
 
-            buf4[4] <= buf4[3];
-            buf4[3] <= buf4[2];
-            buf4[2] <= buf4[1];
-            buf4[1] <= buf4[0];
-            buf4[0] <= queue4_out;
-
-            buf3[4] <= buf3[3];
-            buf3[3] <= buf3[2];
-            buf3[2] <= buf3[1];
-            buf3[1] <= buf3[0];
+            // Flood
+            for (j = 4; j > 0; j = j - 1) begin
+                buf5[j] <= buf5[j - 1];
+                buf4[j] <= buf4[j - 1];
+                buf3[j] <= buf3[j - 1];
+            end
+            buf5[0] <= flood1_queue_out[5];
+            buf4[0] <= flood1_queue_out[4];
             buf3[0] <= threshold_out[0];
 
             // Sobel
-            buf2[2] <= buf2[1];
-            buf2[1] <= buf2[0];
-            buf2[0] <= queue2_out;
-
-            buf1[2] <= buf1[1];
-            buf1[1] <= buf1[0];
-            buf1[0] <= queue1_out;
-
-            buf0[2] <= buf0[1];
-            buf0[1] <= buf0[0];
+            for (j = 2; j > 0; j = j - 1) begin
+                buf2[j] <= buf2[j - 1];
+                buf1[j] <= buf1[j - 1];
+                buf0[j] <= buf0[j - 1];
+            end
+            buf2[0] <= sobel_queue_out[2];
+            buf1[0] <= sobel_queue_out[1];
             buf0[0] <= I;
         end
     end
@@ -242,8 +251,32 @@ module top (
         .p33(buf3[2]),
         .p34(buf3[1]),
         .p35(buf3[0]),
-        .threshold(flood_threshold),
-        .q(flood_window_out)
+        .threshold(flood1_threshold),
+        .q(flood1_window_out)
+    );
+
+    // *****---
+    // *****---
+    // *****---
+    flood_window U5 (
+        .clk(clk),
+        .p11(buf8[4]),
+        .p12(buf8[3]),
+        .p13(buf8[2]),
+        .p14(buf8[1]),
+        .p15(buf8[0]),
+        .p21(buf7[4]),
+        .p22(buf7[3]),
+        .p23(buf7[2]),
+        .p24(buf7[1]),
+        .p25(buf7[0]),
+        .p31(buf6[4]),
+        .p32(buf6[3]),
+        .p33(buf6[2]),
+        .p34(buf6[1]),
+        .p35(buf6[0]),
+        .threshold(flood2_threshold),
+        .q(flood2_window_out)
     );
 
     // Threshold Sobel output to get a binary image.
@@ -263,13 +296,13 @@ module top (
         .clk(clk),
         .reset_n(reset_n),
         .en(en),
-        .A(buf7[2]),
-        .B(buf7[1]),
-        .C(buf7[0]),
+        .A(buf9[2]),
+        .B(buf9[1]),
+        .C(buf9[0]),
         .D(cc_out),
         .x(x),
         .y(y),
-        .p(flood_window_out),
+        .p(flood2_window_out),
         .obj_id(obj_id),
         .num_labels(num_labels),
         .q(cc_out),
@@ -293,7 +326,8 @@ module top (
                   (mode == `GRAY) ?                {3{I}} :
                  (mode == `SOBEL) ? {3{sobel_window_out}} :
                 (mode == `THRESH) ? (threshold_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
-                 (mode == `FLOOD) ? (flood_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
+                (mode == `FLOOD1) ? (flood1_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
+                (mode == `FLOOD2) ? (flood2_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
                     (mode == `CC) ?           {3{cc_out}} :
                  (mode == `COLOR) ?           {color_out} :
                                     {3{sobel_window_out}} ;
