@@ -52,6 +52,7 @@ module top (
     wire cc_in = (mode[`FLOOD2_BIT]) ? flood2_window_out : flood1_window_out;
     wire [`WORD_SIZE - 1:0] threshold_out;
     wire [`LBL_WIDTH - 1:0] cc_out;
+    reg  [`LBL_WIDTH - 1:0] cc_out_delay;
     wire [`PIXEL_SIZE - 1:0] color_out;
 
     // Line buffer signals
@@ -205,6 +206,8 @@ module top (
             buf2[0] <= sobel_queue_out[2];
             buf1[0] <= sobel_queue_out[1];
             buf0[0] <= I;
+
+            cc_out_delay <= cc_out;
         end
     end
 
@@ -303,7 +306,7 @@ module top (
         .A(buf9[2]),
         .B(buf9[1]),
         .C(buf9[0]),
-        .D(cc_out),
+        .D(cc_out_delay),
         .x(x),
         .y(y),
         .p(flood2_window_out),
