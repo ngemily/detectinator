@@ -96,7 +96,6 @@ module connected_components_labeling(
 
     // Merge table
     wire write_merge          = popped | is_new_label;
-    wire resolved_label_valid = data_valid[1];
 
     wire [`LBL_WIDTH - 1:0] index;
     wire [`LBL_WIDTH - 1:0] target;
@@ -120,10 +119,6 @@ module connected_components_labeling(
 
 
     // Data table
-    wire [`LBL_WIDTH - 1:0] r_addr1;
-    wire [`LBL_WIDTH - 1:0] r_addr2;
-    wire [`LBL_WIDTH - 1:0] w_addr;
-
     wire [`D_WIDTH - 1:0] data_in;
     wire [`D_WIDTH - 1:0] data_out1;
     wire [`D_WIDTH - 1:0] data_out2;
@@ -143,9 +138,6 @@ module connected_components_labeling(
     //  1 31:16 - 01
     //  2 47:32 - 10
 
-    assign r_addr1  = q;
-    assign r_addr2  = obj_id;
-    assign w_addr  = q_delay;
     assign data_in = (data_valid[2]) ? {y_acc, x_acc, p_acc} : p_delay[2] ;
 
     ram_dr_sw #(
@@ -155,9 +147,9 @@ module connected_components_labeling(
     DATA_TABLE (
         .clk(clk),
         .wen(1'b1),
-        .w_addr(w_addr),
-        .r_addr1(r_addr1),
-        .r_addr2(r_addr2),
+        .w_addr(q_delay),
+        .r_addr1(q),
+        .r_addr2(obj_id),
         .data_in(data_in),
         .data_out1(data_out1),
         .data_out2(data_out2)
