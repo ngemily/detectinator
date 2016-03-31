@@ -176,6 +176,7 @@ module tb();
                 .bytes_per_row(width * bytes_per_pixel),
                 .rows(height),
                 .mem(mem),
+                .merge_table(dut.U2.MERGE_TABLE.mem),
                 .data_table(dut.U2.DATA_TABLE.mem)
             );
 
@@ -197,11 +198,13 @@ module tb();
         );
 
         $display("Found %d labels.", num_labels);
-        for (i = 0; i < 5; i++) begin
+        dfh = open_file("out/roi.txt", "w");
+        for (i = 0; i < num_labels; i++) begin
             #50
             obj_id <= obj_id + 1;
-            $display("%d: %d %d", obj_id, obj_x / obj_area, obj_y / obj_area);
+            $fwrite(dfh, "%h: %d %d\n", obj_id, obj_x / obj_area, obj_y / obj_area);
         end
+        $fclose(dfh);
 
         // Close files
         $fclose(ifh);

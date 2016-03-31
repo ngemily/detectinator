@@ -100,11 +100,12 @@ module connected_components_labeling(
     wire [`LBL_WIDTH - 1:0] index;
     wire [`LBL_WIDTH - 1:0] target;
     wire [`LBL_WIDTH - 1:0] resolved_label;
+    wire [`LBL_WIDTH - 1:0] resolved_obj_id;
 
     assign index  = (is_new_label) ? num_labels : stack_top[2 * `LBL_WIDTH - 1 -: `LBL_WIDTH];
     assign target = (is_new_label) ? num_labels : stack_top[1 * `LBL_WIDTH - 1 -: `LBL_WIDTH];
 
-    ram #(
+    ram_dr_sw #(
         .ADDR_WIDTH(`LBL_WIDTH),
         .DATA_WIDTH(`LBL_WIDTH)
     )
@@ -112,9 +113,11 @@ module connected_components_labeling(
         .clk(clk),
         .wen(write_merge),
         .w_addr(index),
-        .r_addr(label_delay[0]),
+        .r_addr1(label_delay[0]),
+        .r_addr2(obj_id),
         .data_in(target),
-        .data_out(resolved_label)
+        .data_out1(resolved_label),
+        .data_out2(resolved_obj_id)
     );
 
 
@@ -149,7 +152,7 @@ module connected_components_labeling(
         .wen(1'b1),
         .w_addr(q_delay),
         .r_addr1(q),
-        .r_addr2(obj_id),
+        .r_addr2(resolved_obj_id),
         .data_in(data_in),
         .data_out1(data_out1),
         .data_out2(data_out2)

@@ -215,6 +215,7 @@ task draw_dots(
     input integer bytes_per_row,
     input integer rows,
     inout reg [`WORD_SIZE - 1:0] mem[0:`MEM_SIZE],
+    input reg [`LBL_WIDTH - 1:0] merge_table[0:`MAX_LABEL],
     input reg [`D_WIDTH - 1:0] data_table[0:`MAX_LABEL]
 );
     parameter WIDTH = 384;//`WORD_SIZE;
@@ -231,9 +232,9 @@ task draw_dots(
 
     //$display("%16s %16s %16s %16s", "x_bar", "y_bar", "x", "y");
     for (i = 0; i < DEPTH; i++) begin
-        p_acc = data_table[i][1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-        x_acc = data_table[i][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-        y_acc = data_table[i][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+        p_acc = data_table[merge_table[i]][1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+        x_acc = data_table[merge_table[i]][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+        y_acc = data_table[merge_table[i]][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
         x_bar = x_acc / p_acc;
         y_bar = y_acc / p_acc;
         x = y_bar;
@@ -288,9 +289,6 @@ task dump_data (
     input integer ofh,
     input reg [`D_WIDTH - 1:0] mem[0:`MAX_LABEL]
 );
-    parameter WIDTH = 384;//`WORD_SIZE;
-    parameter DEPTH = 20; //`MEM_SIZE;
-
     integer i;
     longint unsigned p_acc;
     longint unsigned x_acc;
@@ -301,7 +299,7 @@ task dump_data (
     $fwrite(ofh, "%8s %16s %16s %16s %8s %8s\n",
         "label", "area", "xacc", "yacc", "xbar", "ybar");
 
-    for (i = 0; i < DEPTH; i++) begin
+    for (i = 0; i < `MAX_LABEL; i++) begin
         p_acc = mem[i][1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
         x_acc = mem[i][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
         y_acc = mem[i][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
@@ -309,7 +307,7 @@ task dump_data (
         y_bar = y_acc / p_acc;
 
         if (p_acc) begin
-            $fwrite(ofh, "%8d %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_bar, y_bar);
+            $fwrite(ofh, "%h %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_bar, y_bar);
         end
     end
 
