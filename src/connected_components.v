@@ -29,7 +29,14 @@ module connected_components_labeling(
     output reg [`LBL_WIDTH - 1:0] num_labels,
     output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
-    output [`LOC_SIZE - 1:0] obj_y
+    output [`LOC_SIZE - 1:0] obj_y,
+    output [`LOC_SIZE - 1:0] obj_m02,
+    output [`LOC_SIZE - 1:0] obj_m11,
+    output [`LOC_SIZE - 1:0] obj_m20,
+    output [`LOC_SIZE - 1:0] obj_m30,
+    output [`LOC_SIZE - 1:0] obj_m21,
+    output [`LOC_SIZE - 1:0] obj_m12,
+    output [`LOC_SIZE - 1:0] obj_m03
 `else
     output [`LBL_WIDTH - 1:0] q
 `endif
@@ -218,13 +225,17 @@ module connected_components_labeling(
     assign q = (data_valid[1]) ? resolved_label : label_delay[1];
 
     // Output requested object location.
-    wire [`OBJ_WIDTH - 1:0] obj_a     = data_out2[1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] obj_x_acc = data_out2[2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] obj_y_acc = data_out2[3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    assign obj_area = data_out2[0 * `OBJ_WIDTH + `LOC_SIZE:0 * `OBJ_WIDTH];
+    assign obj_x    = data_out2[1 * `OBJ_WIDTH + `LOC_SIZE:1 * `OBJ_WIDTH];
+    assign obj_y    = data_out2[2 * `OBJ_WIDTH + `LOC_SIZE:2 * `OBJ_WIDTH];
+    assign obj_m02  = data_out2[3 * `OBJ_WIDTH + `LOC_SIZE:3 * `OBJ_WIDTH];
+    assign obj_m11  = data_out2[4 * `OBJ_WIDTH + `LOC_SIZE:4 * `OBJ_WIDTH];
+    assign obj_m20  = data_out2[5 * `OBJ_WIDTH + `LOC_SIZE:5 * `OBJ_WIDTH];
+    assign obj_m30  = data_out2[6 * `OBJ_WIDTH + `LOC_SIZE:6 * `OBJ_WIDTH];
+    assign obj_m21  = data_out2[7 * `OBJ_WIDTH + `LOC_SIZE:7 * `OBJ_WIDTH];
+    assign obj_m12  = data_out2[8 * `OBJ_WIDTH + `LOC_SIZE:8 * `OBJ_WIDTH];
+    assign obj_m03  = data_out2[9 * `OBJ_WIDTH + `LOC_SIZE:9 * `OBJ_WIDTH];
 
-    assign obj_area = obj_a[`LOC_SIZE - 1:0];
-    assign obj_x = obj_x_acc[`LOC_SIZE - 1:0];
-    assign obj_y = obj_y_acc[`LOC_SIZE - 1:0];
 endmodule
 
 /*

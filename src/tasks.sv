@@ -301,7 +301,16 @@ task dump_data (
         y_bar = y_acc / p_acc;
 
         if (p_acc) begin
-            $fwrite(ofh, "%h %h %h %h %8d %8d\n", i, p_acc, x_acc, y_acc, x_bar, y_bar);
+            $fwrite(ofh, "%h %h %h %h %8d %8d ", i, p_acc, x_acc, y_acc, x_bar, y_bar);
+            $fwrite(ofh, "%h ", mem[i][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "%h ", mem[i][4 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "%h ", mem[i][5 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "%h ", mem[i][6 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "%h ", mem[i][7 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "%h ", mem[i][8 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "%h ", mem[i][9 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "%h ", mem[i][10* `OBJ_WIDTH - 1 -: `OBJ_WIDTH] / p_acc);
+            $fwrite(ofh, "\n");
         end
     end
 

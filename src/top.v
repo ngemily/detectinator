@@ -17,7 +17,14 @@ module top (
     output [`LBL_WIDTH - 1:0] num_labels,
     output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
-    output [`LOC_SIZE - 1:0] obj_y
+    output [`LOC_SIZE - 1:0] obj_y,
+    output [`LOC_SIZE - 1:0] obj_m02,
+    output [`LOC_SIZE - 1:0] obj_m11,
+    output [`LOC_SIZE - 1:0] obj_m20,
+    output [`LOC_SIZE - 1:0] obj_m30,
+    output [`LOC_SIZE - 1:0] obj_m21,
+    output [`LOC_SIZE - 1:0] obj_m12,
+    output [`LOC_SIZE - 1:0] obj_m03
 `else
     output [`PIXEL_SIZE - 1:0] out
 `endif
@@ -316,7 +323,14 @@ module top (
         .num_labels(num_labels),
         .obj_area(obj_area),
         .obj_x(obj_x),
-        .obj_y(obj_y)
+        .obj_y(obj_y),
+        .obj_m02(obj_m02),
+        .obj_m11(obj_m11),
+        .obj_m20(obj_m20),
+        .obj_m30(obj_m30),
+        .obj_m21(obj_m21),
+        .obj_m12(obj_m12),
+        .obj_m03(obj_m03)
 `else
         .q(cc_out)
 `endif

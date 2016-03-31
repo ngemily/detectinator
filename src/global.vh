@@ -8,7 +8,7 @@
 `define MAX        255
 `define MIN        0
 `define PIXEL_SIZE 24
-`define LOC_SIZE   24
+`define LOC_SIZE   32
 
 // Maximum number of labels
 `define LBL_WIDTH   12
@@ -16,7 +16,7 @@
 
 // Data table parameters
 `define NUM_FEATURES 10
-`define OBJ_WIDTH    32
+`define OBJ_WIDTH    64
 `define D_WIDTH      (`NUM_FEATURES * `OBJ_WIDTH)
 
 /**** Input/output files ****/

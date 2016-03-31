@@ -15,10 +15,17 @@ module tb();
     reg [`PIXEL_SIZE - 1:0] data;
     reg [`LBL_WIDTH - 1:0] obj_id = 1;
     wire [`WORD_SIZE - 1:0] mode = `OUT;
+    wire [`LBL_WIDTH - 1:0] num_labels;
     wire [`LOC_SIZE - 1:0] obj_area;
     wire [`LOC_SIZE - 1:0] obj_x;
     wire [`LOC_SIZE - 1:0] obj_y;
-    wire [`LBL_WIDTH - 1:0] num_labels;
+    wire [`LOC_SIZE - 1:0] obj_m02;
+    wire [`LOC_SIZE - 1:0] obj_m11;
+    wire [`LOC_SIZE - 1:0] obj_m20;
+    wire [`LOC_SIZE - 1:0] obj_m30;
+    wire [`LOC_SIZE - 1:0] obj_m21;
+    wire [`LOC_SIZE - 1:0] obj_m12;
+    wire [`LOC_SIZE - 1:0] obj_m03;
 
     // Outputs
     reg [`PIXEL_SIZE - 1:0] out;
@@ -58,7 +65,14 @@ module tb();
         .obj_area(obj_area),
         .obj_x(obj_x),
         .obj_y(obj_y),
-        .num_labels(num_labels)
+        .num_labels(num_labels),
+        .obj_m02(obj_m02),
+        .obj_m11(obj_m11),
+        .obj_m20(obj_m20),
+        .obj_m30(obj_m30),
+        .obj_m21(obj_m21),
+        .obj_m12(obj_m12),
+        .obj_m03(obj_m03)
     );
 
     // Generate x, y co-ords
@@ -202,7 +216,7 @@ module tb();
         for (i = 0; i < num_labels; i++) begin
             #50
             obj_id <= obj_id + 1;
-            $fwrite(dfh, "%h: %d %d\n", obj_id, obj_x / obj_area, obj_y / obj_area);
+            $fwrite(dfh, "%h: %h %d %d\n", obj_id, obj_area, obj_x / obj_area, obj_y / obj_area);
         end
         $fclose(dfh);
 
