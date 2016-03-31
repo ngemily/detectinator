@@ -16,7 +16,7 @@
 
 // Data table parameters
 `define NUM_FEATURES 10
-`define OBJ_WIDTH    64
+`define OBJ_WIDTH    40
 `define D_WIDTH      (`NUM_FEATURES * `OBJ_WIDTH)
 
 /**** Input/output files ****/
