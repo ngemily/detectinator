@@ -210,7 +210,7 @@ module connected_components_labeling(
             // Register current pixel, for writing into data tbale.
             p_delay[2] <= p_delay[1];
             p_delay[1] <= p_delay[0];
-            p_delay[0] <= {m03, m12, m21, m30, m20, m11, m02, xp, yp, p_in};
+            p_delay[0] <= {m03, m12, m21, m30, m20, m11, m02, yp, xp, p_in};
         end
     end
 
