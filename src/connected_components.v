@@ -134,17 +134,32 @@ module connected_components_labeling(
     wire [`D_WIDTH - 1:0] data_out2;
 
     // Feed into SR
+    // stage 1
     wire [`OBJ_WIDTH - 1:0] p_in = p;
-    wire [`OBJ_WIDTH - 1:0] xp   = x * p;
-    wire [`OBJ_WIDTH - 1:0] yp   = y * p;
-    wire [`OBJ_WIDTH - 1:0] m02  = y * y * p;
-    wire [`OBJ_WIDTH - 1:0] m11  = x * y * p;
-    wire [`OBJ_WIDTH - 1:0] m20  = x * x * p;
-    wire [`OBJ_WIDTH - 1:0] m30  = x * x * x * p;
-    wire [`OBJ_WIDTH - 1:0] m21  = x * x * y * p;
-    wire [`OBJ_WIDTH - 1:0] m12  = x * y * y * p;
-    wire [`OBJ_WIDTH - 1:0] m03  = y * y * y * p;
+    wire [`OBJ_WIDTH - 1:0] xp   = p ? x : 0;
+    wire [`OBJ_WIDTH - 1:0] yp   = p ? y : 0;
 
+    // stage 2
+    wire [`OBJ_WIDTH - 1:0] p_out = p_delay[0][0];
+    wire [`OBJ_WIDTH - 1:0] x_out = p_delay[0][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] y_out = p_delay[0][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+
+    wire [`OBJ_WIDTH - 1:0] m02  = p_out ? y_out * y_out : 0;   // y^2
+    wire [`OBJ_WIDTH - 1:0] m11  = p_out ? x_out * y_out : 0;   // x * y
+    wire [`OBJ_WIDTH - 1:0] m20  = p_out ? x_out * x_out : 0;   // x^2
+
+    // stage 3
+    wire [`OBJ_WIDTH - 1:0] p_out2 = p_delay[1][0];
+    wire [`OBJ_WIDTH - 1:0] x_out2 = p_delay[1][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] y_out2 = p_delay[1][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] yy_out = p_delay[1][4 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] xy_out = p_delay[1][5 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] xx_out = p_delay[1][6 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+
+    wire [`OBJ_WIDTH - 1:0] m30  = p_out2 ? xx_out * x_out2 : 0;    // x^3
+    wire [`OBJ_WIDTH - 1:0] m21  = p_out2 ? xx_out * y_out2 : 0;    // x^2 * y
+    wire [`OBJ_WIDTH - 1:0] m12  = p_out2 ? x_out2 * yy_out : 0;    // x * y^2
+    wire [`OBJ_WIDTH - 1:0] m03  = p_out2 ? yy_out * y_out2 : 0;    // y^3
 
     // Coming out of SR
     wire [`OBJ_WIDTH - 1:0] p_acc   = data_out1[1  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][1  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
@@ -215,9 +230,9 @@ module connected_components_labeling(
             q_delay <= q;
 
             // Register current pixel, for writing into data tbale.
-            p_delay[2] <= p_delay[1];
-            p_delay[1] <= p_delay[0];
-            p_delay[0] <= {m03, m12, m21, m30, m20, m11, m02, yp, xp, p_in};
+            p_delay[2] <= {m03, m12, m21, m30, p_delay[1][6 * `OBJ_WIDTH - 1:0]};
+            p_delay[1] <= {4*`OBJ_WIDTH'b0, m20, m11, m02, p_delay[0][3 * `OBJ_WIDTH - 1:0]};
+            p_delay[0] <= {7*`OBJ_WIDTH'b0, yp, xp, p_in};
         end
     end
 
