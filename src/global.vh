@@ -15,8 +15,8 @@
 `define MAX_LABEL   4095
 
 // Data table parameters
-`define NUM_FEATURES 3
-`define OBJ_WIDTH    24
+`define NUM_FEATURES 10
+`define OBJ_WIDTH    32
 `define D_WIDTH      (`NUM_FEATURES * `OBJ_WIDTH)
 
 /**** Input/output files ****/

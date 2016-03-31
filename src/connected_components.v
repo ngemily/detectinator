@@ -130,18 +130,33 @@ module connected_components_labeling(
     wire [`OBJ_WIDTH - 1:0] p_in = p;
     wire [`OBJ_WIDTH - 1:0] xp   = x * p;
     wire [`OBJ_WIDTH - 1:0] yp   = y * p;
+    wire [`OBJ_WIDTH - 1:0] m02  = y * y * p;
+    wire [`OBJ_WIDTH - 1:0] m11  = x * y * p;
+    wire [`OBJ_WIDTH - 1:0] m20  = x * x * p;
+    wire [`OBJ_WIDTH - 1:0] m30  = x * x * x * p;
+    wire [`OBJ_WIDTH - 1:0] m21  = x * x * y * p;
+    wire [`OBJ_WIDTH - 1:0] m12  = x * y * y * p;
+    wire [`OBJ_WIDTH - 1:0] m03  = y * y * y * p;
+
 
     // Coming out of SR
-    wire [`OBJ_WIDTH - 1:0] p_acc = data_out1[1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][1 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] x_acc = data_out1[2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] y_acc = data_out1[3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] p_acc   = data_out1[1  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][1  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] x_acc   = data_out1[2  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][2  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] y_acc   = data_out1[3  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][3  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] m02_acc = data_out1[4  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][4  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] m11_acc = data_out1[5  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][5  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] m20_acc = data_out1[6  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][6  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] m30_acc = data_out1[7  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][7  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] m21_acc = data_out1[8  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][8  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] m12_acc = data_out1[9  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][9  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] m03_acc = data_out1[10 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][10 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
 
     // Data layout
     //  0 15:0  - 00
     //  1 31:16 - 01
     //  2 47:32 - 10
 
-    assign data_in = (data_valid[2]) ? {y_acc, x_acc, p_acc} : p_delay[2] ;
+    assign data_in = (data_valid[2]) ? {m03_acc, m12_acc, m21_acc, m30_acc, m20_acc, m11_acc, m02_acc, y_acc, x_acc, p_acc} : p_delay[2] ;
 
     ram_dr_sw #(
         .ADDR_WIDTH(`LBL_WIDTH),
@@ -195,7 +210,7 @@ module connected_components_labeling(
             // Register current pixel, for writing into data tbale.
             p_delay[2] <= p_delay[1];
             p_delay[1] <= p_delay[0];
-            p_delay[0] <= {xp, yp, p_in};
+            p_delay[0] <= {m03, m12, m21, m30, m20, m11, m02, xp, yp, p_in};
         end
     end
 
