@@ -48,7 +48,6 @@ module connected_components_labeling(
     // Pipeline registers
     reg [`LBL_WIDTH - 1:0] label_delay  [1:0];
     reg [`LBL_WIDTH - 1:0] q_delay;
-    reg [`D_WIDTH - 1:0]    p_delay      [2:0];
     reg                    data_valid   [2:0];
 
     // Label selection/Merge table
@@ -127,58 +126,53 @@ module connected_components_labeling(
         .data_out2(resolved_obj_id)
     );
 
+    wire [`OBJ_WIDTH - 1:0] m00;
+    wire [`OBJ_WIDTH - 1:0] m01;
+    wire [`OBJ_WIDTH - 1:0] m10;
+    wire [`OBJ_WIDTH - 1:0] m02;
+    wire [`OBJ_WIDTH - 1:0] m11;
+    wire [`OBJ_WIDTH - 1:0] m20;
+    wire [`OBJ_WIDTH - 1:0] m03;
+    wire [`OBJ_WIDTH - 1:0] m12;
+    wire [`OBJ_WIDTH - 1:0] m21;
+    wire [`OBJ_WIDTH - 1:0] m30;
+
+    moment_generator M0(
+        .clk(clk),
+        .p(p),
+        .x(x),
+        .y(y),
+        .m00(m00),
+        .m01(m01),
+        .m10(m10),
+        .m02(m02),
+        .m11(m11),
+        .m20(m20),
+        .m03(m03),
+        .m12(m12),
+        .m21(m21),
+        .m30(m30)
+    );
 
     // Data table
     wire [`D_WIDTH - 1:0] data_in;
     wire [`D_WIDTH - 1:0] data_out1;
     wire [`D_WIDTH - 1:0] data_out2;
 
-    // Feed into SR
-    // stage 1
-    wire [`OBJ_WIDTH - 1:0] p_in = p;
-    wire [`OBJ_WIDTH - 1:0] xp   = p ? x : 0;
-    wire [`OBJ_WIDTH - 1:0] yp   = p ? y : 0;
-
-    // stage 2
-    wire [`OBJ_WIDTH - 1:0] p_out = p_delay[0][0];
-    wire [`OBJ_WIDTH - 1:0] x_out = p_delay[0][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] y_out = p_delay[0][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-
-    wire [`OBJ_WIDTH - 1:0] m02  = p_out ? y_out * y_out : 0;   // y^2
-    wire [`OBJ_WIDTH - 1:0] m11  = p_out ? x_out * y_out : 0;   // x * y
-    wire [`OBJ_WIDTH - 1:0] m20  = p_out ? x_out * x_out : 0;   // x^2
-
-    // stage 3
-    wire [`OBJ_WIDTH - 1:0] p_out2 = p_delay[1][0];
-    wire [`OBJ_WIDTH - 1:0] x_out2 = p_delay[1][2 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] y_out2 = p_delay[1][3 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] yy_out = p_delay[1][4 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] xy_out = p_delay[1][5 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] xx_out = p_delay[1][6 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-
-    wire [`OBJ_WIDTH - 1:0] m30  = p_out2 ? xx_out * x_out2 : 0;    // x^3
-    wire [`OBJ_WIDTH - 1:0] m21  = p_out2 ? xx_out * y_out2 : 0;    // x^2 * y
-    wire [`OBJ_WIDTH - 1:0] m12  = p_out2 ? x_out2 * yy_out : 0;    // x * y^2
-    wire [`OBJ_WIDTH - 1:0] m03  = p_out2 ? yy_out * y_out2 : 0;    // y^3
-
     // Coming out of SR
-    wire [`OBJ_WIDTH - 1:0] p_acc   = data_out1[1  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][1  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] x_acc   = data_out1[2  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][2  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] y_acc   = data_out1[3  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][3  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] m02_acc = data_out1[4  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][4  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] m11_acc = data_out1[5  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][5  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] m20_acc = data_out1[6  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][6  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] m30_acc = data_out1[7  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][7  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] m21_acc = data_out1[8  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][8  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] m12_acc = data_out1[9  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][9  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
-    wire [`OBJ_WIDTH - 1:0] m03_acc = data_out1[10 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + p_delay[2][10 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH];
+    wire [`OBJ_WIDTH - 1:0] p_acc   = data_out1[1  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m00;
+    wire [`OBJ_WIDTH - 1:0] x_acc   = data_out1[2  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m10;
+    wire [`OBJ_WIDTH - 1:0] y_acc   = data_out1[3  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m01;
+    wire [`OBJ_WIDTH - 1:0] m02_acc = data_out1[4  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m02;
+    wire [`OBJ_WIDTH - 1:0] m11_acc = data_out1[5  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m11;
+    wire [`OBJ_WIDTH - 1:0] m20_acc = data_out1[6  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m20;
+    wire [`OBJ_WIDTH - 1:0] m30_acc = data_out1[7  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m30;
+    wire [`OBJ_WIDTH - 1:0] m21_acc = data_out1[8  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m21;
+    wire [`OBJ_WIDTH - 1:0] m12_acc = data_out1[9  * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m12;
+    wire [`OBJ_WIDTH - 1:0] m03_acc = data_out1[10 * `OBJ_WIDTH - 1 -: `OBJ_WIDTH] + m03;
 
-    // Data layout
-    //  0 15:0  - 00
-    //  1 31:16 - 01
-    //  2 47:32 - 10
-
-    assign data_in = (data_valid[2]) ? {m03_acc, m12_acc, m21_acc, m30_acc, m20_acc, m11_acc, m02_acc, y_acc, x_acc, p_acc} : p_delay[2] ;
+    assign data_in = (data_valid[2]) ? {m03_acc, m12_acc, m21_acc, m30_acc, m20_acc, m11_acc, m02_acc, y_acc, x_acc, p_acc} :
+                                       {m03, m12, m21, m30, m20, m11, m02, m01, m10, m00};
 
     ram_dr_sw #(
         .ADDR_WIDTH(`LBL_WIDTH),
@@ -228,11 +222,6 @@ module connected_components_labeling(
 
             // Register current output, for writing data next cycle.
             q_delay <= q;
-
-            // Register current pixel, for writing into data tbale.
-            p_delay[2] <= {m03, m12, m21, m30, p_delay[1][6 * `OBJ_WIDTH - 1:0]};
-            p_delay[1] <= {4*`OBJ_WIDTH'b0, m20, m11, m02, p_delay[0][3 * `OBJ_WIDTH - 1:0]};
-            p_delay[0] <= {7*`OBJ_WIDTH'b0, yp, xp, p_in};
         end
     end
 
@@ -251,6 +240,81 @@ module connected_components_labeling(
     assign obj_m12  = data_out2[8 * `OBJ_WIDTH + `LOC_SIZE:8 * `OBJ_WIDTH];
     assign obj_m03  = data_out2[9 * `OBJ_WIDTH + `LOC_SIZE:9 * `OBJ_WIDTH];
 
+endmodule
+
+/**
+* 3-stage moment generator.  Breaks up x * x * x three operand multiplication
+* into stages.
+*/
+module moment_generator(
+    input clk,
+    input p,
+    input [`LOC_SIZE - 1:0] x,
+    input [`LOC_SIZE - 1:0] y,
+    output [`OBJ_WIDTH - 1:0] m00,
+    output [`OBJ_WIDTH - 1:0] m01,
+    output [`OBJ_WIDTH - 1:0] m10,
+    output [`OBJ_WIDTH - 1:0] m02,
+    output [`OBJ_WIDTH - 1:0] m11,
+    output [`OBJ_WIDTH - 1:0] m20,
+    output [`OBJ_WIDTH - 1:0] m03,
+    output [`OBJ_WIDTH - 1:0] m12,
+    output [`OBJ_WIDTH - 1:0] m21,
+    output [`OBJ_WIDTH - 1:0] m30
+);
+
+    reg [`OBJ_WIDTH - 1:0] m00_delay[2:0];
+    reg [`OBJ_WIDTH - 1:0] m10_delay[2:0];
+    reg [`OBJ_WIDTH - 1:0] m01_delay[2:0];
+
+    reg [`OBJ_WIDTH - 1:0] m20_delay[2:1];
+    reg [`OBJ_WIDTH - 1:0] m11_delay[2:1];
+    reg [`OBJ_WIDTH - 1:0] m02_delay[2:1];
+
+    reg [`OBJ_WIDTH - 1:0] m30_delay[2:2];
+    reg [`OBJ_WIDTH - 1:0] m21_delay[2:2];
+    reg [`OBJ_WIDTH - 1:0] m12_delay[2:2];
+    reg [`OBJ_WIDTH - 1:0] m03_delay[2:2];
+
+    integer i;
+    always @(posedge clk) begin
+        // stage 1
+        for (i = 0; i < 2; i = i + 1) begin
+            m00_delay[i + 1] <= m00_delay[i];
+            m10_delay[i + 1] <= m10_delay[i];
+            m01_delay[i + 1] <= m01_delay[i];
+        end
+        m00_delay[0] <= p;
+        m10_delay[0] <= p ? x : 0;
+        m01_delay[0] <= p ? y : 0;
+
+        // stage 2
+        for (i = 1; i < 2; i = i + 1) begin
+            m20_delay[i + 1] <= m20_delay[i];
+            m11_delay[i + 1] <= m11_delay[i];
+            m02_delay[i + 1] <= m02_delay[i];
+        end
+        m20_delay[1] <= m00_delay[0] ? m10_delay[0] * m10_delay[0] : 0;
+        m11_delay[1] <= m00_delay[0] ? m10_delay[0] * m01_delay[0] : 0;
+        m02_delay[1] <= m00_delay[0] ? m01_delay[0] * m01_delay[0] : 0;
+
+        // stage 3
+        m30_delay[2] <= m00_delay[1] ? m20_delay[1] * m10_delay[1] : 0;
+        m21_delay[2] <= m00_delay[1] ? m20_delay[1] * m01_delay[1] : 0;
+        m12_delay[2] <= m00_delay[1] ? m10_delay[1] * m02_delay[1] : 0;
+        m03_delay[2] <= m00_delay[1] ? m02_delay[1] * m01_delay[1] : 0;
+    end
+
+    assign m00 = m00_delay[2];
+    assign m01 = m01_delay[2];
+    assign m10 = m10_delay[2];
+    assign m02 = m02_delay[2];
+    assign m11 = m11_delay[2];
+    assign m20 = m20_delay[2];
+    assign m03 = m03_delay[2];
+    assign m12 = m12_delay[2];
+    assign m21 = m21_delay[2];
+    assign m30 = m30_delay[2];
 endmodule
 
 /*
