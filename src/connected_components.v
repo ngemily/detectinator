@@ -93,6 +93,7 @@ module connected_components_labeling(
     merge_ctrl U1 (
         .clk(clk),
         .reset_n(reset_n),
+        .en(en),
         .push(is_merge_delay),
         .stack_sel(stack_sel),
         .stack_entry(stack_entry_delay),
@@ -139,6 +140,7 @@ module connected_components_labeling(
 
     moment_generator M0(
         .clk(clk),
+        .en(en),
         .p(p),
         .x(x),
         .y(y),
@@ -248,6 +250,7 @@ endmodule
 */
 module moment_generator(
     input clk,
+    input en,
     input p,
     input [`LOC_SIZE - 1:0] x,
     input [`LOC_SIZE - 1:0] y,
@@ -278,31 +281,33 @@ module moment_generator(
 
     integer i;
     always @(posedge clk) begin
-        // stage 1
-        for (i = 0; i < 2; i = i + 1) begin
-            m00_delay[i + 1] <= m00_delay[i];
-            m10_delay[i + 1] <= m10_delay[i];
-            m01_delay[i + 1] <= m01_delay[i];
-        end
-        m00_delay[0] <= p;
-        m10_delay[0] <= p ? x : 0;
-        m01_delay[0] <= p ? y : 0;
+        if (en) begin
+            // stage 1
+            for (i = 0; i < 2; i = i + 1) begin
+                m00_delay[i + 1] <= m00_delay[i];
+                m10_delay[i + 1] <= m10_delay[i];
+                m01_delay[i + 1] <= m01_delay[i];
+            end
+            m00_delay[0] <= p;
+            m10_delay[0] <= p ? x : 0;
+            m01_delay[0] <= p ? y : 0;
 
-        // stage 2
-        for (i = 1; i < 2; i = i + 1) begin
-            m20_delay[i + 1] <= m20_delay[i];
-            m11_delay[i + 1] <= m11_delay[i];
-            m02_delay[i + 1] <= m02_delay[i];
-        end
-        m20_delay[1] <= m00_delay[0] ? m10_delay[0] * m10_delay[0] : 0;
-        m11_delay[1] <= m00_delay[0] ? m10_delay[0] * m01_delay[0] : 0;
-        m02_delay[1] <= m00_delay[0] ? m01_delay[0] * m01_delay[0] : 0;
+            // stage 2
+            for (i = 1; i < 2; i = i + 1) begin
+                m20_delay[i + 1] <= m20_delay[i];
+                m11_delay[i + 1] <= m11_delay[i];
+                m02_delay[i + 1] <= m02_delay[i];
+            end
+            m20_delay[1] <= m00_delay[0] ? m10_delay[0] * m10_delay[0] : 0;
+            m11_delay[1] <= m00_delay[0] ? m10_delay[0] * m01_delay[0] : 0;
+            m02_delay[1] <= m00_delay[0] ? m01_delay[0] * m01_delay[0] : 0;
 
-        // stage 3
-        m30_delay[2] <= m00_delay[1] ? m20_delay[1] * m10_delay[1] : 0;
-        m21_delay[2] <= m00_delay[1] ? m20_delay[1] * m01_delay[1] : 0;
-        m12_delay[2] <= m00_delay[1] ? m10_delay[1] * m02_delay[1] : 0;
-        m03_delay[2] <= m00_delay[1] ? m02_delay[1] * m01_delay[1] : 0;
+            // stage 3
+            m30_delay[2] <= m00_delay[1] ? m20_delay[1] * m10_delay[1] : 0;
+            m21_delay[2] <= m00_delay[1] ? m20_delay[1] * m01_delay[1] : 0;
+            m12_delay[2] <= m00_delay[1] ? m10_delay[1] * m02_delay[1] : 0;
+            m03_delay[2] <= m00_delay[1] ? m02_delay[1] * m01_delay[1] : 0;
+        end
     end
 
     assign m00 = m00_delay[2];
@@ -323,6 +328,7 @@ endmodule
 */
 module merge_ctrl(
     input clk,
+    input en,
     input reset_n,
     input push,
     input stack_sel,
@@ -352,8 +358,8 @@ module merge_ctrl(
         .reset_n(reset_n),
         .data_in(stack_entry),
         .data_out(stack0_top),
-        .push(push_0),
-        .pop(pop_0),
+        .push(push_0 & en),
+        .pop(pop_0 & en),
         .empty(empty_0),
         .full(full_0)
     );
@@ -367,8 +373,8 @@ module merge_ctrl(
         .reset_n(reset_n),
         .data_in(stack_entry),
         .data_out(stack1_top),
-        .push(push_1),
-        .pop(pop_1),
+        .push(push_1 & en),
+        .pop(pop_1 & en),
         .empty(empty_1),
         .full(full_1)
     );
@@ -382,7 +388,9 @@ module merge_ctrl(
     assign pop_1 = ~stack_sel && ~empty_1;
 
     always @(posedge clk) begin
-        popped <= pop_0 || pop_1;
+        if (en) begin
+            popped <= pop_0 || pop_1;
+        end
     end
 
     assign stack_top = (stack_sel) ? stack0_top : stack1_top;

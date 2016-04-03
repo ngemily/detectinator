@@ -233,6 +233,7 @@ module top (
     // ***                  <buf0>
     sobel_window U0 (
         .clk(clk),
+        .en(en),
         .p1(buf2[2]),
         .p2(buf2[1]),
         .p3(buf2[0]),
@@ -250,6 +251,7 @@ module top (
     // *****---
     flood_window U4 (
         .clk(clk),
+        .en(en),
         .p11(buf5[4]),
         .p12(buf5[3]),
         .p13(buf5[2]),
@@ -274,6 +276,7 @@ module top (
     // *****---
     flood_window U5 (
         .clk(clk),
+        .en(en),
         .p11(buf8[4]),
         .p12(buf8[3]),
         .p13(buf8[2]),
