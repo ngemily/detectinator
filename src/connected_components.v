@@ -83,26 +83,24 @@ module connected_components_labeling(
 
     // Stack manager
     wire popped;
-    wire stack_sel;
     wire [`LBL_WIDTH * 2 - 1:0] stack_top;
     wire [`LBL_WIDTH * 2 - 1:0] stack_entry;    // Assume max one merge per neighbourhood.
 
     assign stack_entry = {max_label, min_label};
-    assign stack_sel   = y[0];
 
     merge_ctrl U1 (
         .clk(clk),
         .reset_n(reset_n),
         .en(en),
         .push(is_merge_delay),
-        .stack_sel(stack_sel),
+        .stack_sel(y[0]),
         .stack_entry(stack_entry_delay),
         .popped(popped),
         .stack_top(stack_top)
     );
 
     // Merge table
-    wire write_merge          = popped | is_new_label;
+    wire write_merge          = en & (popped | is_new_label);
 
     wire [`LBL_WIDTH - 1:0] index;
     wire [`LBL_WIDTH - 1:0] target;
