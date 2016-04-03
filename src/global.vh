@@ -11,8 +11,8 @@
 `define LOC_SIZE   32
 
 // Maximum number of labels
-`define LBL_WIDTH   12
-`define MAX_LABEL   4095
+`define LBL_WIDTH   14
+`define MAX_LABEL   16383
 
 // Data table parameters
 `define NUM_FEATURES 10
