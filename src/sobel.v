@@ -29,19 +29,23 @@ module sobel_window(
     input [`WORD_SIZE - 1:0] p9,
     output reg [`WORD_SIZE - 1:0] q
 );
-    wire signed [`WORD_SIZE - 1:0] dx;
-    wire signed [`WORD_SIZE - 1:0] dy;
-    wire [`WORD_SIZE - 1:0] abs_dx;
-    wire [`WORD_SIZE - 1:0] abs_dy;
+    wire signed [`WORD_SIZE + 4:0] dx;
+    wire signed [`WORD_SIZE + 4:0] dy;
+    wire [`WORD_SIZE + 4:0] abs_dx;
+    wire [`WORD_SIZE + 4:0] abs_dy;
+    wire [`WORD_SIZE + 5:0] sum;
+    wire [`WORD_SIZE - 1:0] q1;
 
     assign dx = (3 * p1 + 10 * p4 + 3 * p7) - (3 * p3 + 10 * p6 + 3 * p9);
     assign dy = (3 * p1 + 10 * p2 + 3 * p3) - (3 * p7 + 10 * p8 + 3 * p9);
     assign abs_dx = (dx < 0) ? -dx : dx;
     assign abs_dy = (dy < 0) ? -dy : dy;
+    assign sum = abs_dx + abs_dy;
+    assign q1 = (sum > `MAX) ? `MAX : sum;
 
     always @(posedge clk) begin
         if (en) begin
-            q <= abs_dx + abs_dy;
+            q <= q1;
         end
     end
 endmodule
