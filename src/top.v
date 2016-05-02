@@ -75,7 +75,7 @@ module top (
 
     genvar i;
     generate
-        for (i = 1; i < 1 + 2; i = i + 1) begin
+        for (i = 1; i < 1 + 2; i = i + 1) begin: line_buf0
             queue #(
                 .ADDR_WIDTH(11),
                 .DATA_WIDTH(`WORD_SIZE),
@@ -103,7 +103,7 @@ module top (
     assign flood1_queue_in[5] = buf4[4];
 
     generate
-        for (i = 4; i < 4 + 2; i = i + 1) begin
+        for (i = 4; i < 4 + 2; i = i + 1) begin: line_buf1
             queue #(
                 .ADDR_WIDTH(11),
                 .DATA_WIDTH(1),
@@ -131,7 +131,7 @@ module top (
     assign flood2_queue_in[8] = buf7[4];
 
     generate
-        for (i = 7; i < 7 + 2; i = i + 1) begin
+        for (i = 7; i < 7 + 2; i = i + 1) begin: line_buf2
             queue #(
                 .ADDR_WIDTH(11),
                 .DATA_WIDTH(1),
