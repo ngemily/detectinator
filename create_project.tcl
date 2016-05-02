@@ -9,6 +9,7 @@ add_files -fileset sources_1 -norecurse $srcDir/mem.v
 add_files -fileset sources_1 -norecurse $srcDir/sobel.v
 add_files -fileset sources_1 -norecurse $srcDir/util.v
 add_files -fileset sources_1 -norecurse $srcDir/top.v
+add_files -fileset sources_1 -norecurse $srcDir/window_generator.v
 add_files -fileset constrs_1 -norecurse $srcDir/timing.xdc
 
 update_compile_order -fileset sources_1
