@@ -29,10 +29,6 @@ module top (
     output reg [`PIXEL_SIZE - 1:0] out
 `endif
 );
-    /*  Internal registers */
-    // Row buffers
-    reg [`LBL_WIDTH - 1:0] buf9 [2:0];
-
     /*  Internal signals */
     // Section data into RGB channels
     wire [`WORD_SIZE - 1:0] R = data[7:0];
@@ -40,18 +36,21 @@ module top (
     wire [`WORD_SIZE - 1:0] B = data[23:16];
 
     // Intermediate stages of output
-    wire [`WORD_SIZE - 1:0] I;
-    wire [`WORD_SIZE - 1:0] sobel_window_out;
-    wire flood1_window_out;
-    wire flood2_window_out;
-    wire cc_in = (mode[`FLOOD2_BIT]) ? flood2_window_out : flood1_window_out;
-    wire [`WORD_SIZE - 1:0] threshold_out;
-    wire [`LBL_WIDTH - 1:0] cc_out;
-    reg  [`LBL_WIDTH - 1:0] cc_out_delay;
+    wire [`WORD_SIZE - 1:0]  I;
+    wire [`WORD_SIZE - 1:0]  sobel_window_out;
+    wire                     flood1_window_out;
+    wire                     flood2_window_out;
+    wire [`WORD_SIZE - 1:0]  threshold_out;
+    wire [`LBL_WIDTH - 1:0]  cc_out;
+    reg  [`LBL_WIDTH - 1:0]  cc_out_delay;
     wire [`PIXEL_SIZE - 1:0] color_out;
 
-    // Sobel line buffers: 3x3, data width `WORD_SIZE
+    // Pixel windows for neighbourhood computations.
+    // wire [height * width * data width - 1:0] window_in;
     wire [3 * 3 * `WORD_SIZE - 1:0] sobel_window_in;
+    wire [3 * 5 * 1 - 1:0] flood1_window_in;
+    wire [3 * 5 * 1 - 1:0] flood2_window_in;
+    wire [1 * 4 * `LBL_WIDTH - 1:0] cc_window_in; // WIDTH=4 to match delay on D
 
     window_generator #(
         .WORD_SIZE(`WORD_SIZE),
@@ -65,9 +64,6 @@ module top (
         .dout(sobel_window_in)
     );
 
-    // flood1 line buffers: 3x5, data width 1
-    wire [3 * 5 * 1 - 1:0] flood1_window_in;
-
     window_generator #(
         .WORD_SIZE(1),
         .WIDTH(5),
@@ -79,9 +75,6 @@ module top (
         .din(threshold_out[0]),
         .dout(flood1_window_in)
     );
-
-    // flood2 line buffers: 3x5, data width 1
-    wire [3 * 5 * 1 - 1:0] flood2_window_in;
 
     window_generator #(
         .WORD_SIZE(1),
@@ -95,38 +88,22 @@ module top (
         .dout(flood2_window_in)
     );
 
-    // Connected components buffer: 1x3
-    wire empty;
-    wire full;
-
-    wire [`LBL_WIDTH - 1:0] queue9_out;
-
-    queue #(
-        .ADDR_WIDTH(11),
-        .DATA_WIDTH(`LBL_WIDTH),
-        .MAX_DEPTH(`FRAME_WIDTH - 4)
-    )
-    Q9 (
+    window_generator #(
+        .WORD_SIZE(`LBL_WIDTH),
+        .WIDTH(4),
+        .HEIGHT(1),
+        .BOTTOM_QUEUE(1)
+    ) W3 (
         .clk(clk),
+        .en(en),
         .reset_n(reset_n),
-        .enqueue(en),
-        .dequeue(en & full),
-        .data_in(cc_out),
-        .data_out(queue9_out),
-        .empty(empty),
-        .full(full)
+        .din(cc_out),
+        .dout(cc_window_in)
     );
 
-    // Set up row buffers:
-    integer j;
+    // Delay cc output.
     always @(posedge clk) begin
         if (en) begin
-            // Connected Components
-            for (j = 2; j > 0; j = j - 1) begin
-                buf9[j] <= buf9[j - 1];
-            end
-            buf9[0] <= queue9_out;
-
             cc_out_delay <= cc_out;
         end
     end
@@ -226,9 +203,9 @@ module top (
         .clk(clk),
         .reset_n(reset_n),
         .en(en),
-        .A(buf9[2]),
-        .B(buf9[1]),
-        .C(buf9[0]),
+        .A(cc_window_in[3 * `LBL_WIDTH - 1 -: `LBL_WIDTH]),
+        .B(cc_window_in[2 * `LBL_WIDTH - 1 -: `LBL_WIDTH]),
+        .C(cc_window_in[1 * `LBL_WIDTH - 1 -: `LBL_WIDTH]),
         .D(cc_out_delay),
         .x(x),
         .y(y),

@@ -3,31 +3,30 @@
 * Generate a window for image kernel computations.
 *
 * Size of the window and data width are parameterizable.  FIFO width is
-* calculated based on frame width (frame width - window size).
+* calculated based on frame width (frame width - window size).  Bottom queue is
+* optional, defaults to 'false'.  Usually not needed, supplied for the special
+* case of connected components where the desired pixel window is not
+* rectangular. NB: window size unaffected by existence of bottom queue.
 *
 * Return the result as a concatenation of each pixel because arrays in port
 * declarations not allowed.
 *
-*     <--- SRs --->  <-------- FIFO -------->
-* ^    +==+ +==+ +==+ +======================+
-* |    |  |-|  |-|  |-|                      |<
-* |    +==+ +==+ +==+ +======================+ `
-* h  /-----------------------------------------'
-* e  | +==+ +==+ +==+ +======================+
-* i  `-|  |-|  |-|  |-|                      |<
-* g    +==+ +==+ +==+ +======================+ `
-* h  /-----------------------------------------'
-* t  | +==+ +==+ +==+ 
-* |  `-|  |-|  |-|  |<--- <din>
-* v    +==+ +==+ +==+
+*   ^   <-SRs-> <--- FIFO ---->
+*   h    x-x-x-[                ]<.
+*   e  ,--------------------------'
+*   i  `-x-x-x-[                ]<.
+*   g  ,--------------------------'
+*   h  `-x-x-x-[                ]<.
+*   t  ,--------------------------'
+*   v  `-x-x-x-[opt. queue]<-- din
 *
-*     <--- width ----->
-*
+*       <-width->
 */
 module window_generator #(
     parameter WORD_SIZE = `WORD_SIZE,
     parameter WIDTH = 1,
-    parameter HEIGHT = 1
+    parameter HEIGHT = 1,
+    parameter BOTTOM_QUEUE = 0
 ) (
     input clk,
     input en,
@@ -37,17 +36,36 @@ module window_generator #(
 );
     reg [WORD_SIZE - 1:0] p [HEIGHT - 1:0][WIDTH - 1:0];
 
-    wire [WORD_SIZE - 1:0] queue_in [HEIGHT - 1:1];
-    wire [WORD_SIZE - 1:0] queue_out [HEIGHT - 1:1];
+    wire [WORD_SIZE - 1:0] queue_in [HEIGHT - 1:0];
+    wire [WORD_SIZE - 1:0] queue_out [HEIGHT - 1:0];
 
-    wire [HEIGHT - 1:1] full;
-    wire [HEIGHT - 1:1] empty;
+    wire [HEIGHT - 1:0] full;
+    wire [HEIGHT - 1:0] empty;
 
     genvar  i, j;
     integer k, l;
 
     // Setup queues
     generate
+        if (BOTTOM_QUEUE) begin
+            assign queue_in[0] = din;
+
+            queue #(
+                .ADDR_WIDTH(11),
+                .DATA_WIDTH(WORD_SIZE),
+                .MAX_DEPTH(`FRAME_WIDTH - WIDTH)
+            )
+            Q0 (
+                .clk(clk),
+                .reset_n(reset_n),
+                .enqueue(en),
+                .dequeue(en & full[0]),
+                .data_in(queue_in[0]),
+                .data_out(queue_out[0]),
+                .empty(empty[0]),
+                .full(full[0])
+            );
+        end
         for (i = 1; i < HEIGHT; i = i + 1) begin: line_queue
             assign queue_in[i] = p[i - 1][WIDTH - 1];
 
@@ -80,6 +98,8 @@ module window_generator #(
     //  |         +---+
     //  |         | 3 |
     //  +---------+---+
+    //
+    //  in the case of a bottom queue, only regions 1 and 2 exist.
     always @(posedge clk) begin
         for (k = 0; k < HEIGHT; k = k + 1) begin
             for (l = 1; l < WIDTH; l = l + 1) begin
@@ -89,7 +109,11 @@ module window_generator #(
         for (k = 1; k < HEIGHT; k = k + 1) begin
             p[k][0] <= queue_out[k];
         end
-        p[0][0] <= din;
+        if (BOTTOM_QUEUE) begin
+            p[0][0] <= queue_out[0];
+        end else begin
+            p[0][0] <= din;
+        end
     end
 
     // Pack the output
