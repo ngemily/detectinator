@@ -13,7 +13,7 @@ module top (
     input [`WORD_SIZE - 1:0] flood2_threshold,
     input [`LBL_WIDTH - 1:0] obj_id,
 `ifndef STANDALONE
-    output [`PIXEL_SIZE - 1:0] out,
+    output reg [`PIXEL_SIZE - 1:0] out,
     output [`LBL_WIDTH - 1:0] num_labels,
     output [`LOC_SIZE - 1:0] obj_area,
     output [`LOC_SIZE - 1:0] obj_x,
@@ -26,7 +26,7 @@ module top (
     output [`LOC_SIZE - 1:0] obj_m12,
     output [`LOC_SIZE - 1:0] obj_m03
 `else
-    output [`PIXEL_SIZE - 1:0] out
+    output reg [`PIXEL_SIZE - 1:0] out
 `endif
 );
     /*  Internal registers */
@@ -267,13 +267,17 @@ module top (
         .data_out(color_out)
     );
 
-    assign out =  (mode == `PASS) ?                {data} :
-                  (mode == `GRAY) ?                {3{I}} :
-                 (mode == `SOBEL) ? {3{sobel_window_out}} :
-                (mode == `THRESH) ? (threshold_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
-                (mode == `FLOOD1) ? (flood1_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
-                (mode == `FLOOD2) ? (flood2_window_out ? {`PIXEL_SIZE{1'b1}} : {`PIXEL_SIZE{1'b0}}) :
-                    (mode == `CC) ?              {cc_out} :
-                 (mode == `COLOR) ?           {color_out} :
-                                    {3{sobel_window_out}} ;
+    always @(posedge clk) begin
+        case (mode)
+            `PASS:   out = data;
+            `GRAY:   out = {3{I}};
+            `SOBEL:  out = {3{sobel_window_out}};
+            `THRESH: out = {`PIXEL_SIZE{threshold_out[0]}};
+            `FLOOD1: out = {`PIXEL_SIZE{flood1_window_out}};
+            `FLOOD2: out = {`PIXEL_SIZE{flood2_window_out}};
+            `CC:     out = cc_out;
+            `COLOR:  out = color_out;
+            default: out = {3{sobel_window_out}} ;
+        endcase
+    end
 endmodule
